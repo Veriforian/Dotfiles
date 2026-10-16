@@ -1,0 +1,8 @@
+{{- if lookPath "mise" -}}
+#!/bin/bash
+# Re-runs whenever ~/.config/mise/config.toml changes.
+# mise config hash: {{ include "dot_config/mise/config.toml" | sha256sum }}
+set -euo pipefail
+
+mise install
+{{ end -}}

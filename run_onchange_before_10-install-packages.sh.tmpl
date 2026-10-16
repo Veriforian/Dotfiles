@@ -1,0 +1,16 @@
+{{- if lookPath "omarchy-pkg-add" -}}
+#!/bin/bash
+# Installs .chezmoidata/packages.yaml. chezmoi re-runs this whenever the
+# rendered script changes, i.e. whenever the package list below changes.
+set -euo pipefail
+
+packages=(
+{{- range .packages.pacman }}
+  {{ . | quote }}
+{{- end }}
+)
+
+echo "chezmoi: ensuring ${#packages[@]} packages are installed"
+# Skips packages already installed; prompts for sudo only if something is missing.
+omarchy-pkg-add "${packages[@]}"
+{{ end -}}

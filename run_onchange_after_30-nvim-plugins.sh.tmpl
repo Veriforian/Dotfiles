@@ -1,0 +1,9 @@
+{{- if lookPath "nvim" -}}
+#!/bin/bash
+# Re-runs whenever lazy-lock.json changes, pinning plugins to the lockfile.
+# lazy-lock hash: {{ include "dot_config/nvim/lazy-lock.json" | sha256sum }}
+set -euo pipefail
+
+timeout 600 nvim --headless "+Lazy! restore" +qa </dev/null \
+  || echo "chezmoi: Lazy restore did not finish cleanly; open nvim and check :Lazy" >&2
+{{ end -}}

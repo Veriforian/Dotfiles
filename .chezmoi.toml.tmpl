@@ -1,0 +1,6 @@
+{{- $email := promptStringOnce . "email" "Git email for this machine" -}}
+{{- $work  := promptBoolOnce   . "work"  "Is this a work machine" -}}
+[data]
+  email = {{ $email | quote }}
+  work  = {{ $work }}
+  vm    = {{ stat "/usr/share/try-omarchy" | not | not }}

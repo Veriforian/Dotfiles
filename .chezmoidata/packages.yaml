@@ -1,0 +1,26 @@
+# Packages installed by run_onchange_before_10-install-packages.sh.tmpl.
+# Editing this list changes the rendered script, so the next `chezmoi apply`
+# installs whatever was added. Removing a package here does not uninstall it.
+#
+# Language toolchains (node, go, ...) live in ~/.config/mise/config.toml instead.
+packages:
+  pacman:
+    # Neovim and its build needs (treesitter compiles parsers)
+    - neovim
+    - base-devel
+    - tree-sitter-cli
+    # LazyVim only maps <leader>gg / <leader>gG when lazygit is on PATH
+    - lazygit
+    # lua/plugins/lazydocker.lua
+    - lazydocker
+    # fzf-lua / snacks pickers
+    - ripgrep
+    - fd
+    - fzf
+    # fzf-lua code-action previewer uses delta when present
+    - git-delta
+    # stylua.toml in the nvim config
+    - stylua
+    # snacks.image rendering
+    - imagemagick
+    - python-pip
