@@ -1,17 +1,18 @@
 -- Change the default Omarchy look'n'feel.
 
 -- https://wiki.hypr.land/Configuring/Basics/Variables/#general
--- hl.config({
---   general = {
---     -- No gaps between windows or borders.
---     gaps_in = 0,
---     gaps_out = 0,
---     border_size = 0,
---
---     -- Change to niri-like side-scrolling layout.
---     layout = "scrolling",
---   },
--- })
+hl.config({
+	general = {
+		-- No gaps between windows or the screen edge (Omarchy default: 5 / 10).
+		-- Borders stay (Omarchy default 2) so the focused window is still visible.
+		gaps_in = 0,
+		gaps_out = 0,
+		-- border_size = 0,
+
+		-- Change to niri-like side-scrolling layout.
+		-- layout = "scrolling",
+	},
+})
 
 -- https://wiki.hypr.land/Configuring/Basics/Variables/#decoration
 -- hl.config({
@@ -48,3 +49,10 @@
 --     column_width = 0.97,
 --   },
 -- })
+
+-- Opacity: only terminals are translucent; every other app is fully opaque.
+-- Omarchy tags every window "default-opacity" (0.985 focused / 0.96 unfocused)
+-- and gives browsers 1.0 / 0.985. These load after Omarchy's rules, so they win.
+-- SUPER + BACKSPACE (toggle window transparency) still works per window.
+o.window(".*", { opacity = "1 1" })
+o.window({ tag = "terminal" }, { opacity = "0.90 0.85" })

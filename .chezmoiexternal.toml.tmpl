@@ -17,3 +17,13 @@
     refreshPeriod = "168h"
     clone.args = ["--depth", "1"]
 {{- end }}
+
+# Omarchy theme from https://omarchy.gallery/themes/one-dark-pro. Lands where
+# `omarchy theme install` would put it (slug "one-dark-pro"); the .git dir it keeps
+# makes `omarchy theme set` stage it as an installed (untrusted) theme.
+# Applied by run_onchange_after_40-omarchy-theme.sh.tmpl.
+[".config/omarchy/themes/one-dark-pro"]
+    type = "git-repo"
+    url = "https://github.com/sc0ttman/omarchy-one-dark-pro-theme.git"
+    refreshPeriod = "168h"
+    clone.args = ["--depth", "1"]

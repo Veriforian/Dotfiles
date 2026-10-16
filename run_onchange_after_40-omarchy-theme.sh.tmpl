@@ -1,0 +1,21 @@
+{{- if lookPath "omarchy-theme-set" -}}
+#!/bin/bash
+# Applies the Omarchy theme below. chezmoi re-runs this only when this script
+# changes, so switching themes by hand afterwards isn't undone on every apply.
+# The theme itself is cloned by .chezmoiexternal.toml.tmpl.
+set -euo pipefail
+
+theme="one-dark-pro"
+
+if [[ -z ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
+  echo "chezmoi: not in a Hyprland session; run 'omarchy theme set $theme' once logged in"
+  exit 0
+fi
+
+if [[ $(cat ~/.local/state/omarchy/current/theme.name 2>/dev/null) == "$theme" ]]; then
+  exit 0
+fi
+
+echo "chezmoi: applying Omarchy theme $theme"
+omarchy-theme-set "$theme"
+{{ end -}}

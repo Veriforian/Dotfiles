@@ -21,6 +21,7 @@ To make a script react to another file, embed that file's hash in a comment:
 | `run_onchange_before_10-install-packages.sh.tmpl` | `omarchy-pkg-add` exists | `packages.yaml` changes | `omarchy-pkg-add <list>`; skips installed packages |
 | `run_onchange_after_20-mise-install.sh.tmpl` | `mise` exists | `~/.config/mise/config.toml` changes | `mise install` |
 | `run_onchange_after_30-nvim-plugins.sh.tmpl` | `nvim` exists | `lazy-lock.json` changes | `nvim --headless "+Lazy! restore"` (10 min timeout) |
+| `run_onchange_after_40-omarchy-theme.sh.tmpl` | `omarchy-theme-set` exists | Script edited (e.g. `theme=`) | `omarchy theme set one-dark-pro` unless already current. Outside a Hyprland session it prints a reminder and skips. The theme is cloned by `.chezmoiexternal.toml.tmpl`, and externals are written before `after_` scripts run |
 
 ## Packages (`.chezmoidata/packages.yaml`)
 

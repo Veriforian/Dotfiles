@@ -30,7 +30,7 @@ chezmoi git -- add -A && chezmoi git -- commit -m "..." && chezmoi git -- push
 | [Scripts & packages](docs/scripts.md) | `run_onchange_*` scripts and `.chezmoidata/packages.yaml` |
 | [Shell](docs/shell.md) | `.bashrc` customizations, `.bashrc.local` secrets |
 | [Neovim](docs/neovim.md) | LazyVim options, keymaps, commands, plugins |
-| [Desktop](docs/desktop.md) | Hyprland, foot terminal, Omarchy drift |
+| [Desktop](docs/desktop.md) | Hyprland, Omarchy theme, foot terminal, Omarchy drift |
 | [Tools](docs/tools.md) | git, mise, tmux (+ plugins), starship, lazygit |
 | [Troubleshooting](docs/troubleshooting.md) | Problems solved so far and their fixes |
 | [Changelog](docs/changelog.md) | Dated log of config changes |
@@ -41,7 +41,7 @@ chezmoi git -- add -A && chezmoi git -- commit -m "..." && chezmoi git -- push
 .chezmoi.toml.tmpl          per-machine prompts → ~/.config/chezmoi/chezmoi.toml
 .chezmoidata/packages.yaml  package list for the install script
 .chezmoiignore              targets chezmoi must not touch (incl. these docs)
-.chezmoiexternal.toml.tmpl  git repos chezmoi clones into ~ (tmux plugins)
+.chezmoiexternal.toml.tmpl  git repos chezmoi clones into ~ (tmux plugins, Omarchy theme)
 run_onchange_*.sh.tmpl      setup scripts (see docs/scripts.md)
 dot_bashrc                  → ~/.bashrc
 dot_config/                 → ~/.config/
