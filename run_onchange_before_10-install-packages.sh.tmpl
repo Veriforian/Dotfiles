@@ -13,4 +13,16 @@ packages=(
 echo "chezmoi: ensuring ${#packages[@]} packages are installed"
 # Skips packages already installed; prompts for sudo only if something is missing.
 omarchy-pkg-add "${packages[@]}"
+
+aur_packages=(
+{{- range .packages.aur }}
+  {{ . | quote }}
+{{- end }}
+)
+
+if (( ${#aur_packages[@]} )); then
+  echo "chezmoi: ensuring ${#aur_packages[@]} AUR packages are installed"
+  # yay; skips installed packages, builds/installs only what's missing.
+  omarchy-pkg-aur-add "${aur_packages[@]}"
+fi
 {{ end -}}

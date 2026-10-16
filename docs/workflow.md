@@ -40,6 +40,7 @@ chezmoi re-add <file>     # accept Omarchy's version
 chezmoi merge <file>      # pick and choose
 ```
 If a file drifts all the time, manage only the keys you care about with `modify_`, or ignore it.
+Example: `dot_config/private_vesktop/settings/modify_settings.json` (see [desktop](desktop.md#discord-presence-vesktop--customidle)).
 
 ### After `:Lazy update` in nvim
 

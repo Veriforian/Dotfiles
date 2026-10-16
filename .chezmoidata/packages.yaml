@@ -3,6 +3,7 @@
 # installs whatever was added. Removing a package here does not uninstall it.
 #
 # Language toolchains (node, go, ...) live in ~/.config/mise/config.toml instead.
+# `aur:` packages go through omarchy-pkg-aur-add (yay) after the pacman ones.
 packages:
   pacman:
     # Neovim and its build needs (treesitter compiles parsers)
@@ -24,3 +25,9 @@ packages:
     # snacks.image rendering
     - imagemagick
     - python-pip
+    # modify_ script for ~/.config/vesktop/settings/settings.json
+    - jq
+  aur:
+    # Discord client; Vencord's CustomIdle keeps presence Online (docs/desktop.md).
+    # Started minimized by hypr/autostart.lua; settings via modify_settings.json.
+    - vesktop-bin

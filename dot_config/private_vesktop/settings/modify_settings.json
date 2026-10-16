@@ -1,0 +1,22 @@
+#!/bin/bash
+# chezmoi modify_ script for Vencord's settings (Vesktop writes this file
+# itself). Gets the current file on stdin, prints it back with only the
+# CustomIdle plugin forced on; everything else stays as Vesktop wrote it.
+#
+# idleTimeout 0 = Discord never auto-idles, so presence stays "Online" while
+# Vesktop runs. Unlike an input jiggler this doesn't touch hypridle, so the
+# screen still locks. Output matches Vencord's format (4 spaces, no final
+# newline) so `chezmoi diff` stays quiet after Vesktop saves.
+set -euo pipefail
+
+current=$(cat)
+[[ -n $current ]] || current='{}'
+
+merged=$(jq --indent 4 '
+  .plugins.CustomIdle = ((.plugins.CustomIdle // {}) + {
+    enabled: true,
+    idleTimeout: 0,
+    remainInIdle: false
+  })' <<<"$current")
+
+printf '%s' "$merged"

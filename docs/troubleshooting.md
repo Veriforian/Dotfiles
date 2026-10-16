@@ -4,6 +4,23 @@
 
 Problems hit so far, newest first. Add new ones at the top with symptom → cause → fix.
 
+## tmux: `prefix q` (reload) and `prefix ?` (keybindings) do nothing
+
+- **Symptom:** neither key does anything after the Mac config was merged in (commit `5451dbb`).
+- **Cause:** while the file was being edited, the `# Config and help` comment and the two `bind` lines below it were joined
+  onto one line. The whole line became a comment, so tmux never created either binding.
+- **Fix:** restored the three lines from the stock Omarchy version (`git show d48feab:dot_config/tmux/tmux.conf`).
+- **Check:** `tmux list-keys -T prefix q` and `tmux list-keys -T prefix '?'` both print a binding.
+  `git diff d48feab -- dot_config/tmux/tmux.conf` should only show lines added at the bottom.
+
+## Discord goes Idle while AFK; keep-presence doesn't work
+
+- **Symptom:** after ~10 min without input, Discord (Vesktop) shows Idle. [keep-presence](https://github.com/carrot69/keep-presence) does nothing on Wayland.
+- **Cause:** keep-presence fakes input via X11 libraries, which can't inject input on Wayland. Discord's client idles itself after 10 min.
+- **Fix:** Vencord's CustomIdle plugin with `idleTimeout: 0`, set by the `modify_settings.json` script. The screen still locks
+  normally. See [desktop](desktop.md#discord-presence-vesktop--customidle).
+- **Check:** `jq .plugins.CustomIdle ~/.config/vesktop/settings/settings.json` → `enabled: true, idleTimeout: 0`; restart Vesktop after changing it.
+
 ## VM: slow downloads, apps slow to start (Discord, fast.com)
 
 - **Symptom:** fast.com takes ~10 s to start, then reaches ~200 Mb/s. Discord/Vesktop is sluggish. pacman crawls.

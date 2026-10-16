@@ -11,6 +11,8 @@ Hyprland (Lua config), the Omarchy theme and the foot terminal. Defaults live in
 | `~/.config/hypr/bindings.lua` | Stock (tracked so future changes sync) |
 | `~/.config/hypr/looknfeel.lua` | No gaps, terminal-only opacity (below) |
 | `~/.config/hypr/input.lua` (template) | Stock + VM-only lines (below) |
+| `~/.config/hypr/autostart.lua` | Vesktop in the tray (below) |
+| `~/.config/vesktop/settings/settings.json` | `modify_` script: only CustomIdle (below) |
 | `~/.config/foot/foot.ini` | Stock |
 
 Check what's actually customized with `diff /usr/share/omarchy/config/<path> ~/.config/<path>`.
@@ -56,6 +58,27 @@ and it never reads a theme's `starship.toml` (its README says to copy it by hand
   (its own `onedark.nvim`, style `darker`, see [neovim](neovim.md)).
 - Don't run `omarchy theme install` for this theme: it deletes the clone and re-clones it, so chezmoi re-pulls it on the next apply.
   It still works, but there's no need.
+
+## Discord presence (Vesktop + CustomIdle)
+
+Goal: stay "Online" in Discord while away from the keyboard. It replaces [keep-presence](https://github.com/carrot69/keep-presence),
+which is unmaintained and doesn't work on Wayland.
+
+- **How:** Vesktop ships Vencord, and its **CustomIdle** plugin with `idleTimeout: 0` turns off Discord's auto-idle
+  (the timeout becomes infinite). `remainInIdle: false` means you go back online on your own if you ever do go idle.
+- **Why not an input jiggler:** on Wayland that needs `ydotool` with a root `uinput` daemon. The fake input would
+  also reset hypridle, so the screen would never lock. CustomIdle only touches Discord's own timer.
+- **Managed by:** `dot_config/private_vesktop/settings/modify_settings.json`, a chezmoi `modify_` script. It takes the
+  live file, uses `jq` to set only `plugins.CustomIdle`, and leaves the rest (other plugins, theme, …) as Vesktop wrote it.
+  Its output uses Vencord's format (4-space indent, no final newline), so Vesktop saves don't show up in `chezmoi diff`.
+- **Install:** `vesktop-bin` (AUR) is in `packages.yaml` under `aur:` (see [scripts](scripts.md)).
+- **Autostart:** `hypr/autostart.lua` runs `vesktop --start-minimized` at login (tray only). Presence only holds while Vesktop runs.
+- **Apply with Vesktop closed**, or restart it after `chezmoi apply`. A running Vesktop can write its in-memory settings
+  over the file, and CustomIdle's timeout only takes effect after a restart.
+- **Check:** Vesktop → Settings → Vencord → Plugins → CustomIdle (on, timeout 0), or
+  `jq .plugins.CustomIdle ~/.config/vesktop/settings/settings.json`.
+- **Limits:** this only controls the desktop client. If Vesktop is closed, Discord shows you offline (or whatever your
+  phone reports).
 
 ## Applying changes
 

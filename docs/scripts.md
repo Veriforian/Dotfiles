@@ -18,7 +18,7 @@ To make a script react to another file, embed that file's hash in a comment:
 | Script | Guard | Re-runs when | Does |
 |---|---|---|---|
 | `run_onchange_before_05-vm-network.sh.tmpl` | `.vm` | Script edited | DNS over TLS (`/etc/systemd/resolved.conf.d/10-dns-over-tls.conf`), NetworkManager ignores DHCP DNS, prefers `ca.us`/`tw2` ARM mirrors. Idempotent; sudo only if something differs. |
-| `run_onchange_before_10-install-packages.sh.tmpl` | `omarchy-pkg-add` exists | `packages.yaml` changes | `omarchy-pkg-add <list>`; skips installed packages |
+| `run_onchange_before_10-install-packages.sh.tmpl` | `omarchy-pkg-add` exists | `packages.yaml` changes | `omarchy-pkg-add <pacman list>`, then `omarchy-pkg-aur-add <aur list>` (yay); both skip installed packages |
 | `run_onchange_after_20-mise-install.sh.tmpl` | `mise` exists | `~/.config/mise/config.toml` changes | `mise install` |
 | `run_onchange_after_30-nvim-plugins.sh.tmpl` | `nvim` exists | `lazy-lock.json` changes | `nvim --headless "+Lazy! restore"` (10 min timeout) |
 | `run_onchange_after_40-omarchy-theme.sh.tmpl` | `omarchy-theme-set` exists | Script edited (e.g. `theme=`) | `omarchy theme set one-dark-pro` unless already current. Outside a Hyprland session it prints a reminder and skips. The theme is cloned by `.chezmoiexternal.toml.tmpl`, and externals are written before `after_` scripts run |
@@ -35,13 +35,20 @@ To make a script react to another file, embed that file's hash in a comment:
 | `git-delta` | fzf-lua code-action previewer |
 | `stylua` | `stylua.toml` in the nvim config |
 | `imagemagick`, `python-pip` | snacks.image rendering |
+| `jq` | `modify_` script for Vesktop's `settings.json` (see [desktop](desktop.md#discord-presence-vesktop--customidle)) |
+
+**AUR** (`packages.aur`, installed with `omarchy-pkg-aur-add` → yay):
+
+| Package | Why |
+|---|---|
+| `vesktop-bin` | Discord client (aarch64 build available). CustomIdle keeps presence Online (see [desktop](desktop.md#discord-presence-vesktop--customidle)) |
 
 Language toolchains (node, go, …) live in mise instead (see [tools](tools.md#mise)).
 
 ### Adding or removing a package
 
-1. Edit `.chezmoidata/packages.yaml` and add a comment saying why.
-2. On the VM, check that it exists for aarch64: `pacman -Si <pkg>`.
+1. Edit `.chezmoidata/packages.yaml` (`pacman:` for repo packages, `aur:` for AUR) and add a comment saying why.
+2. On the VM, check that it exists for aarch64: `pacman -Si <pkg>`, or `yay -Si <pkg>` for AUR (look at `Architecture`).
 3. `chezmoi apply` installs it.
 4. Update the table above and the [changelog](changelog.md).
 
