@@ -1,0 +1,19 @@
+# tmux plugins, cloned straight into TPM's XDG plugin dir so a fresh machine
+# needs no `prefix + I`. Keep in sync with the @plugin list in
+# dot_config/tmux/tmux.conf. `chezmoi apply` pulls updates at most weekly;
+# force sooner with `chezmoi apply --refresh-externals`.
+{{- $plugins := dict
+      "tpm"            "tmux-plugins/tpm"
+      "tmux-sensible"  "tmux-plugins/tmux-sensible"
+      "tmux-yank"      "tmux-plugins/tmux-yank"
+      "tmux-themepack" "jimeh/tmux-themepack"
+      "tmux-resurrect" "tmux-plugins/tmux-resurrect"
+      "tmux-continuum" "tmux-plugins/tmux-continuum" }}
+{{- range $name, $repo := $plugins }}
+
+[".config/tmux/plugins/{{ $name }}"]
+    type = "git-repo"
+    url = "https://github.com/{{ $repo }}.git"
+    refreshPeriod = "168h"
+    clone.args = ["--depth", "1"]
+{{- end }}

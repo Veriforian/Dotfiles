@@ -135,6 +135,7 @@ Prompts in `.chezmoi.toml.tmpl`: `promptStringOnce`, `promptBoolOnce`, `promptCh
   refreshPeriod = "168h"
 ```
 Types: `file`, `archive`, `archive-file`, `git-repo`. Force: `chezmoi apply --refresh-externals`.
+In use: `.chezmoiexternal.toml.tmpl` (templated so the tmux plugin list is one dict, see [tools](tools.md#tmux-configtmuxtmuxconf)).
 
 ## Secrets: never commit them in plain text
 

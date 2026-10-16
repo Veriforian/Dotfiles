@@ -6,6 +6,7 @@ Config changes, newest first. One line per change; link to the doc that describe
 
 ## 2026-10-16
 
+- tmux: Mac config merged into the Omarchy one; TPM + sensible, yank, themepack, resurrect, continuum as chezmoi git externals. [tools](tools.md#tmux-configtmuxtmuxconf)
 - chezmoi config: delta diff pager, nvim editor with apply-on-save, `nvim -d` merge. [workflow](workflow.md#chezmoi-config-in-chezmoitomltmpl-enabled)
 - Docs suite added: README + `docs/` (replaces `CHEATSHEET.md`).
 - VM: `run_onchange_before_05-vm-network`, with DNS over TLS and faster ARM mirrors. [scripts](scripts.md), [troubleshooting](troubleshooting.md)
