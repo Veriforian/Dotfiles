@@ -6,6 +6,8 @@ Config changes, newest first. One line per change; link to the doc that describe
 
 ## 2026-10-16
 
+- Machines: `.vm` now detects any VM (`systemd-detect-virt`), e.g. OmacVM and UTM. Try Omarchy input includes are guarded by their own files, and ARM mirrors only apply on `archarm`. [machines](machines.md)
+- Terminal: foot background ~30% darker than the theme (user `foot.ini.tpl` + `theme-set` hook keep foot and tmux in sync). [desktop](desktop.md#terminal-background-darker-than-the-theme)
 - Monitors: `hyprmon-bin` (AUR) for visual monitor layout; VM limited to one display, documented. [desktop](desktop.md#monitors)
 - SSH: systemd user ssh-agent + `AddKeysToAgent`; passphrase asked once per login, not on every git/lazygit operation. [tools](tools.md#ssh-agent-git-lazygit)
 - tmux: fixed `prefix q` / `prefix ?`; their bind lines had been merged into a comment. [troubleshooting](troubleshooting.md)

@@ -1,0 +1,19 @@
+{{- if lookPath "omarchy-theme-set" -}}
+#!/bin/bash
+# Re-applies the CURRENT Omarchy theme whenever the user theme templates or the
+# theme-set hook change, so the generated configs (foot.ini) pick them up.
+# themed/foot.ini.tpl: {{ include "dot_config/omarchy/themed/foot.ini.tpl" | sha256sum }}
+# theme-set hook:      {{ include "dot_config/omarchy/hooks/theme-set.d/executable_10-darker-terminal-bg" | sha256sum }}
+set -euo pipefail
+
+current=$(cat ~/.local/state/omarchy/current/theme.name 2>/dev/null || true)
+[[ -n $current ]] || exit 0
+
+if [[ -z ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
+  echo "chezmoi: not in a Hyprland session; run 'omarchy theme set $current' once logged in"
+  exit 0
+fi
+
+echo "chezmoi: re-applying Omarchy theme $current (theme templates changed)"
+omarchy-theme-set "$current"
+{{ end -}}

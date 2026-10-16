@@ -1,6 +1,6 @@
 {{- if .vm -}}
 #!/bin/bash
-# Try Omarchy VM only. Runs before the package install so it benefits.
+# Any VM (.vm: Try Omarchy, OmacVM, UTM, ...). Runs before the package install so it benefits.
 # - DNS over TLS: the VM's NAT (and the host network) drops ~5% of UDP DNS
 #   packets, each costing a 3-5s retry. TCP resends in milliseconds.
 # - ARM mirrors: the geo redirect picks a ~40 KB/s mirror; ca.us/tw2 measured fastest.
@@ -28,10 +28,13 @@ if [[ -n "$con" && "$(nmcli -g ipv4.ignore-auto-dns con show "$con")" != "yes" ]
   sudo nmcli con up "$con" >/dev/null
 fi
 
+{{ if eq .chezmoi.osRelease.id "archarm" -}}
+# Arch Linux ARM only: these mirrors don't serve x86_64.
 ml=/etc/pacman.d/mirrorlist
 if ! grep -q '^Server = http://ca.us.mirror.archlinuxarm.org/' "$ml"; then
   echo "chezmoi: preferring ca.us / tw2 ARM mirrors"
   sudo cp "$ml" "$ml.bak.$(date +%s)"
   sudo sed -i '0,/^Server/s##Server = http://ca.us.mirror.archlinuxarm.org/$arch/$repo\nServer = http://tw2.mirror.archlinuxarm.org/$arch/$repo\nServer#' "$ml"
 fi
+{{ end -}}
 {{ end -}}

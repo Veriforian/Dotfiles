@@ -10,19 +10,23 @@
 |---|---|---|
 | `email` | Prompt: "Git email for this machine" | Nothing yet (see [known gaps](#known-gaps)) |
 | `work` | Prompt: "Is this a work machine" | Nothing yet |
-| `vm` | Auto: `/usr/share/try-omarchy` exists | `hypr/input.lua.tmpl`, `run_onchange_before_05-vm-network` |
+| `vm` | Auto: `systemd-detect-virt --vm` isn't `none` (Try Omarchy, OmacVM, UTM, any VM), or `/usr/share/try-omarchy` exists | `run_onchange_before_05-vm-network` |
 
 Useful built-ins: `.chezmoi.arch` (`amd64` / `arm64`), `.chezmoi.osRelease.id` (`arch` / `archarm`), `.chezmoi.hostname`.
+
+**Try Omarchy-only bits** don't use `.vm`. They check for their own files instead, e.g. `hypr/input.lua.tmpl` only
+`dofile()`s `/usr/share/try-omarchy/*-input.lua` if that file exists. Templates run with `missingkey=error`, so a new
+data key breaks rendering until `chezmoi init` is re-run. Prefer `stat` checks for host-specific files.
 
 Inspect them with `chezmoi data`. Re-run the prompts with `chezmoi init`. Answers you already gave are kept, so edit `~/.config/chezmoi/chezmoi.toml` to change one.
 
 ## What differs per machine
 
-| Item | Desktop (amd64) | Try Omarchy VM (arm64) |
+| Item | Desktop (amd64) | VM (arm64; Try Omarchy unless noted) |
 |---|---|---|
-| `hypr/input.lua` | Stock comments only | Also loads `/usr/share/try-omarchy/pinch-input.lua` and `apple-keyboard-input.lua` |
+| `hypr/input.lua` | Stock comments only | Try Omarchy only: also loads `/usr/share/try-omarchy/pinch-input.lua` and `apple-keyboard-input.lua` |
 | DNS | System default | DNS over TLS to Cloudflare/Google; DHCP DNS ignored |
-| Pacman mirrors | Arch mirrors | `ca.us` → `tw2` → geo redirect (Arch Linux ARM) |
+| Pacman mirrors | Arch mirrors | `ca.us` → `tw2` → geo redirect (only when `osRelease.id` is `archarm`) |
 | mise | `mise` package | `try-omarchy-mise` package |
 | CUDA paths in `.bashrc` | Meaningful | Harmless no-op (not yet templated) |
 
@@ -33,6 +37,12 @@ Inspect them with `chezmoi data`. Re-run the prompts with `chezmoi init`. Answer
    Scripts run in order: VM network (VM only) → packages (asks for sudo) → files → mise → nvim plugins.
 3. Create `~/.bashrc.local` with secrets (see [shell](shell.md#secrets-bashrclocal)).
 4. Open a new terminal. Check with `chezmoi status` (should be empty) and `chezmoi doctor`.
+
+## Other VMs (OmacVM, UTM)
+
+`.vm` is true there too, so they get the network script. ARM mirrors are only used on Arch Linux ARM. They don't get
+the Try Omarchy input includes. Dual-display research: `~/OmWorkspace/notes/dual-display/` (outside the repo).
+Run `chezmoi init` once on an existing machine after this change, so `vm` is re-detected (on Try Omarchy it stays `true`).
 
 ## Try Omarchy VM notes
 

@@ -56,10 +56,13 @@
 -- hl.gesture({ fingers = 3, direction = "left", action = function() hl.dispatch(hl.dsp.focus({ direction = "l" })) end })
 -- hl.gesture({ fingers = 3, direction = "right", action = function() hl.dispatch(hl.dsp.focus({ direction = "r" })) end })
 
-{{ if .vm -}}
+{{/* Try Omarchy only: each include is guarded by its own file, so other VMs
+     (OmacVM, UTM) with .vm = true don't dofile() a missing path. */ -}}
+{{ if stat "/usr/share/try-omarchy/pinch-input.lua" -}}
 -- Try Omarchy's host pinch device carries gestures only.
 dofile("/usr/share/try-omarchy/pinch-input.lua")
-
+{{ end -}}
+{{ if stat "/usr/share/try-omarchy/apple-keyboard-input.lua" }}
 -- Match Apple keyboard geometry (ansi/iso/jis) from the host cmdline.
 dofile("/usr/share/try-omarchy/apple-keyboard-input.lua")
 {{- end }}

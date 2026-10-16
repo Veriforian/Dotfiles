@@ -1,9 +1,17 @@
 {{- $email := promptStringOnce . "email" "Git email for this machine" -}}
 {{- $work  := promptBoolOnce   . "work"  "Is this a work machine" -}}
+{{- /* Any VM (Try Omarchy, OmacVM, UTM, ...): systemd-detect-virt prints the
+       hypervisor ("qemu", "apple", ...) or "none" (exit 1, hence || true).
+       Try Omarchy is also matched by its marker dir, in case detection fails. */ -}}
+{{- $virt := "none" -}}
+{{- if lookPath "systemd-detect-virt" -}}
+{{-   $virt = output "sh" "-c" "systemd-detect-virt --vm 2>/dev/null || true" | trim -}}
+{{- end -}}
+{{- $vm := or (and (ne $virt "none") (ne $virt "")) (stat "/usr/share/try-omarchy" | not | not) -}}
 [data]
   email = {{ $email | quote }}
   work  = {{ $work }}
-  vm    = {{ stat "/usr/share/try-omarchy" | not | not }}
+  vm    = {{ $vm }}
 [diff]
   pager = "delta"
 [edit]

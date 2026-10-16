@@ -17,10 +17,11 @@ To make a script react to another file, embed that file's hash in a comment:
 
 | Script | Guard | Re-runs when | Does |
 |---|---|---|---|
-| `run_onchange_before_05-vm-network.sh.tmpl` | `.vm` | Script edited | DNS over TLS (`/etc/systemd/resolved.conf.d/10-dns-over-tls.conf`), NetworkManager ignores DHCP DNS, prefers `ca.us`/`tw2` ARM mirrors. Idempotent; sudo only if something differs. |
+| `run_onchange_before_05-vm-network.sh.tmpl` | `.vm` (any VM, see [machines](machines.md)) | Script edited | DNS over TLS (`/etc/systemd/resolved.conf.d/10-dns-over-tls.conf`), NetworkManager ignores DHCP DNS, prefers `ca.us`/`tw2` ARM mirrors (Arch Linux ARM only). Idempotent; sudo only if something differs. |
 | `run_onchange_before_10-install-packages.sh.tmpl` | `omarchy-pkg-add` exists | `packages.yaml` changes | `omarchy-pkg-add <pacman list>`, then `omarchy-pkg-aur-add <aur list>` (yay); both skip installed packages |
 | `run_onchange_after_20-mise-install.sh.tmpl` | `mise` exists | `~/.config/mise/config.toml` changes | `mise install` |
 | `run_onchange_after_30-nvim-plugins.sh.tmpl` | `nvim` exists | `lazy-lock.json` changes | `nvim --headless "+Lazy! restore"` (10 min timeout) |
+| `run_onchange_after_45-omarchy-themed.sh.tmpl` | `omarchy-theme-set` exists | `themed/foot.ini.tpl` or the `theme-set` hook changes (hashes) | `omarchy theme set <current theme>` to re-render generated configs. On a fresh machine this repeats `40`'s theme set (harmless). See [desktop](desktop.md#terminal-background-darker-than-the-theme) |
 | `run_onchange_after_50-ssh-agent.sh.tmpl` | `systemctl` + OpenSSH's `ssh-agent.socket` unit exist | Script edited | `systemctl --user enable --now ssh-agent.socket` if not enabled. User unit, no sudo (see [tools](tools.md#ssh-agent-git-lazygit)) |
 | `run_onchange_after_40-omarchy-theme.sh.tmpl` | `omarchy-theme-set` exists | Script edited (e.g. `theme=`) | `omarchy theme set one-dark-pro` unless already current. Outside a Hyprland session it prints a reminder and skips. The theme is cloned by `.chezmoiexternal.toml.tmpl`, and externals are written before `after_` scripts run |
 

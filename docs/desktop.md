@@ -14,6 +14,8 @@ Hyprland (Lua config), the Omarchy theme and the foot terminal. Defaults live in
 | `~/.config/hypr/autostart.lua` | Vesktop in the tray (below) |
 | `~/.config/vesktop/settings/settings.json` | `modify_` script: only CustomIdle (below) |
 | `~/.config/foot/foot.ini` | Stock |
+| `~/.config/omarchy/themed/foot.ini.tpl` | Darker terminal background (below) |
+| `~/.config/omarchy/hooks/theme-set.d/10-darker-terminal-bg` | Keeps open terminals and tmux darker after a theme change (below) |
 
 Check what's actually customized with `diff /usr/share/omarchy/config/<path> ~/.config/<path>`.
 
@@ -36,7 +38,7 @@ do this. They load after Omarchy's rules, and the last matching rule wins:
 
 ### `hypr/input.lua.tmpl`
 
-On the VM only (`{{ if .vm }}`), it loads:
+On Try Omarchy only (each include is guarded by `stat` of its own file, not `.vm`), it loads:
 - `/usr/share/try-omarchy/pinch-input.lua`: the host pinch device carries gestures only.
 - `/usr/share/try-omarchy/apple-keyboard-input.lua`: Apple keyboard geometry (`applealu_ansi`) from the kernel cmdline.
 
@@ -99,6 +101,29 @@ which is unmaintained and doesn't work on Wayland.
   `jq .plugins.CustomIdle ~/.config/vesktop/settings/settings.json`.
 - **Limits:** this only controls the desktop client. If Vesktop is closed, Discord shows you offline (or whatever your
   phone reports).
+
+## Terminal background: darker than the theme
+
+foot's background is **~30% darker** than the theme's (One Dark Pro: `#282c34` → `#1c1f24`). The rest of the palette is
+unchanged, and it works for any theme.
+
+- **`~/.config/omarchy/themed/foot.ini.tpl`:** a copy of Omarchy's `default/themed/foot.ini.tpl`. User templates
+  override the built-in one by name. `background`, `regular0` and the cursor text colour use
+  `{{ mix_strip background darker_background 75% }}`.
+  - **Tune:** 50% ≈ 20% darker, 75% ≈ 30%, 100% = the theme's `darker_background` (≈ 40%). Change all three lines.
+  - Needs a `darker_background` key in the theme's `colors.toml`. Stock themes and One Dark Pro have one. Without it
+    the token isn't filled in and foot rejects the config.
+  - Omarchy's own template won't reach us any more. After big Omarchy updates, diff it with
+    `/usr/share/omarchy/default/themed/foot.ini.tpl`.
+- **`theme-set.d/10-darker-terminal-bg` hook:** on every `omarchy theme set`, Omarchy pushes the theme's plain
+  background into open foot windows and tmux (OSC 11 plus tmux `window-style`). The hook runs after that and pushes
+  the darker colour from the generated `foot.ini` instead. Without it, tmux would stay at the lighter background until
+  the tmux server restarts.
+- **`run_onchange_after_45-omarchy-themed.sh.tmpl`:** re-applies the *current* theme when the template or hook changes,
+  so `chezmoi apply` is enough.
+- **Why not a second `include=` in `foot.ini`:** foot treats a missing include file as a fatal config error
+  (`foot --check-config` exits non-zero), and the generated file doesn't exist until the next theme set.
+- **Check:** `grep ^background ~/.local/state/omarchy/current/theme/foot.ini` → `1c1f24`; `tmux show -g window-style`.
 
 ## Applying changes
 
