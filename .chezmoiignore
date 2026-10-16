@@ -4,5 +4,8 @@
 # Untracked machine-local secrets, sourced from ~/.bashrc
 .bashrc.local
 
-# Repo-only docs
-CHEATSHEET.md
+# Repo-only docs (never deployed to ~)
+README.md
+docs
+docs/**
+CLAUDE.md

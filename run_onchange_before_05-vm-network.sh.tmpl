@@ -1,0 +1,37 @@
+{{- if .vm -}}
+#!/bin/bash
+# Try Omarchy VM only. Runs before the package install so it benefits.
+# - DNS over TLS: the VM's NAT (and the host network) drops ~5% of UDP DNS
+#   packets, each costing a 3-5s retry. TCP resends in milliseconds.
+# - ARM mirrors: the geo redirect picks a ~40 KB/s mirror; ca.us/tw2 measured fastest.
+# Re-runs whenever this script changes. Idempotent: only asks for sudo if something differs.
+set -euo pipefail
+
+conf=/etc/systemd/resolved.conf.d/10-dns-over-tls.conf
+desired_conf='[Resolve]
+DNS=1.1.1.1#cloudflare-dns.com 1.0.0.1#cloudflare-dns.com 8.8.8.8#dns.google
+DNSOverTLS=yes
+Domains=~.'
+
+if [[ "$(cat "$conf" 2>/dev/null)" != "$desired_conf" ]]; then
+  echo "chezmoi: enabling DNS over TLS"
+  sudo mkdir -p "${conf%/*}"
+  printf '%s\n' "$desired_conf" | sudo tee "$conf" >/dev/null
+  sudo systemctl restart systemd-resolved
+fi
+
+# Stop using the NAT's plain-UDP forwarder handed out by DHCP.
+con=$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet"{print $1; exit}')
+if [[ -n "$con" && "$(nmcli -g ipv4.ignore-auto-dns con show "$con")" != "yes" ]]; then
+  echo "chezmoi: ignoring DHCP DNS on '$con'"
+  sudo nmcli con mod "$con" ipv4.ignore-auto-dns yes ipv6.ignore-auto-dns yes
+  sudo nmcli con up "$con" >/dev/null
+fi
+
+ml=/etc/pacman.d/mirrorlist
+if ! grep -q '^Server = http://ca.us.mirror.archlinuxarm.org/' "$ml"; then
+  echo "chezmoi: preferring ca.us / tw2 ARM mirrors"
+  sudo cp "$ml" "$ml.bak.$(date +%s)"
+  sudo sed -i '0,/^Server/s##Server = http://ca.us.mirror.archlinuxarm.org/$arch/$repo\nServer = http://tw2.mirror.archlinuxarm.org/$arch/$repo\nServer#' "$ml"
+fi
+{{ end -}}

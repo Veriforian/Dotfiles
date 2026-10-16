@@ -4,3 +4,11 @@
   email = {{ $email | quote }}
   work  = {{ $work }}
   vm    = {{ stat "/usr/share/try-omarchy" | not | not }}
+[diff]
+  pager = "delta"
+[edit]
+  command = "nvim"
+  apply = true
+[merge]
+  command = "nvim"
+  args = ["-d"]
