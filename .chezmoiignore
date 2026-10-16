@@ -1,2 +1,8 @@
 # nvim used to be its own repo; chezmoi is now the source of truth
 .config/nvim/.git
+
+# Untracked machine-local secrets, sourced from ~/.bashrc
+.bashrc.local
+
+# Repo-only docs
+CHEATSHEET.md

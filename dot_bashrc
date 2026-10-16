@@ -12,3 +12,18 @@ source "$OMARCHY_PATH/default/bash/rc"
 #
 # Make an alias for invoking commands you use constantly
 # alias p='python'
+
+# Add go to path
+export PATH=$PATH:$(go env GOPATH)/bin
+export GOPRIVATE="gitlab.com/trazi-ventures/*,github.com/TetonDigitalLLC/*"
+
+# CUDA
+export CUDA_HOME=/opt/cuda
+export PATH=/opt/cuda/bin:$PATH
+export LD_LIBRARY_PATH=/opt/cuda/lib64:/usr/lib:/usr/local/lib:$LD_LIBRARY_PATH
+
+alias ws="cd ~/Documents/Workspace/Professional"
+alias fixVesk="systemctl --user restart xdg-desktop-portal xdg-desktop-portal-hyprland pipewire wireplumber"
+
+# Machine-local secrets and overrides (untracked; see .chezmoiignore)
+[[ -f ~/.bashrc.local ]] && source ~/.bashrc.local
