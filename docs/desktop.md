@@ -59,6 +59,26 @@ and it never reads a theme's `starship.toml` (its README says to copy it by hand
 - Don't run `omarchy theme install` for this theme: it deletes the clone and re-clones it, so chezmoi re-pulls it on the next apply.
   It still works, but there's no need.
 
+## Monitors
+
+**Tool: [hyprmon](https://github.com/erans/hyprmon)** (`hyprmon-bin`, AUR). It's a terminal UI: arrange displays visually,
+set mode, scale and position, and save profiles.
+- Changes apply live (`hyprctl keyword monitor …`). Saving writes `~/.config/hypr/hyprmon.lua` and adds `require("hyprmon")`
+  to `hyprland.lua` the first time. It backs a file up as `<file>.bak.<timestamp>` before changing it.
+- `hyprmon.lua` is **not** tracked yet. Layouts are per machine (output names differ), so add it once the desktop layout is
+  settled, probably as a template keyed on the machine.
+- Omarchy's own **Display** panel (`Super+Ctrl+D`) only has brightness, scale and laptop-display toggles; it can't arrange
+  displays. `nwg-displays` (repo, writes hyprlang `monitors.conf`) doesn't fit the Lua config.
+
+**VM: only one display.** The guest has one QEMU virtio-gpu output (`Virtual-1`), and only the Mac host app can add more
+(QEMU `max_outputs`). Try Omarchy runs QEMU's Cocoa frontend and sizes `Virtual-1` to its window
+(`/usr/local/bin/omarchy-native-display-sync`). Nothing in the guest can create a second monitor.
+- **Don't save a hyprmon layout on the VM.** A rule for `Virtual-1` would override that window-following rule
+  in `monitors.lua`, so the VM would stop resizing with its window.
+- Options: look in Try Omarchy's settings on the Mac for a display count. Or (untested) turn off macOS
+  *Displays have separate Spaces* and stretch the VM window across both screens, giving one wide `Virtual-1`.
+  Real dual-monitor use is for the Omarchy desktop.
+
 ## Discord presence (Vesktop + CustomIdle)
 
 Goal: stay "Online" in Discord while away from the keyboard. It replaces [keep-presence](https://github.com/carrot69/keep-presence),

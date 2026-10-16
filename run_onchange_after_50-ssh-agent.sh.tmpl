@@ -1,0 +1,12 @@
+{{- if and (lookPath "systemctl") (stat "/usr/lib/systemd/user/ssh-agent.socket") -}}
+#!/bin/bash
+# Enables OpenSSH's per-user agent (socket-activated, $XDG_RUNTIME_DIR/ssh-agent.socket).
+# User unit, so no sudo. Paired with ~/.config/environment.d/10-ssh-agent.conf,
+# the SSH_AUTH_SOCK default in ~/.bashrc and AddKeysToAgent in ~/.ssh/config.
+set -euo pipefail
+
+if ! systemctl --user is-enabled --quiet ssh-agent.socket 2>/dev/null; then
+  echo "chezmoi: enabling ssh-agent.socket (user)"
+  systemctl --user enable --now ssh-agent.socket
+fi
+{{ end -}}

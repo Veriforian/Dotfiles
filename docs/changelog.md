@@ -6,6 +6,8 @@ Config changes, newest first. One line per change; link to the doc that describe
 
 ## 2026-10-16
 
+- Monitors: `hyprmon-bin` (AUR) for visual monitor layout; VM limited to one display, documented. [desktop](desktop.md#monitors)
+- SSH: systemd user ssh-agent + `AddKeysToAgent`; passphrase asked once per login, not on every git/lazygit operation. [tools](tools.md#ssh-agent-git-lazygit)
 - tmux: fixed `prefix q` / `prefix ?`; their bind lines had been merged into a comment. [troubleshooting](troubleshooting.md)
 - Discord presence: Vencord CustomIdle (`idleTimeout 0`) via a `modify_` script; Vesktop (`vesktop-bin`, AUR) installed + autostarts minimized; `jq` package; install script gained an `aur:` list. [desktop](desktop.md#discord-presence-vesktop--customidle)
 - Desktop: One Dark Pro theme (omarchy.gallery) as a chezmoi external + `run_onchange_after_40-omarchy-theme`; Hyprland gaps set to 0; only terminals translucent (0.90 / 0.85), all other apps opaque. [desktop](desktop.md)

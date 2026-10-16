@@ -25,5 +25,16 @@ export LD_LIBRARY_PATH=/opt/cuda/lib64:/usr/lib:/usr/local/lib:$LD_LIBRARY_PATH
 alias ws="cd ~/Documents/Workspace/Professional"
 alias fixVesk="systemctl --user restart xdg-desktop-portal xdg-desktop-portal-hyprland pipewire wireplumber"
 
+# SSH agent: one per login (systemd ssh-agent.socket), shared by every terminal,
+# tmux pane, nvim and lazygit. Keep an existing socket (e.g. ssh -A forwarding).
+export SSH_AUTH_SOCK="${SSH_AUTH_SOCK:-$XDG_RUNTIME_DIR/ssh-agent.socket}"
+# Ask for the key passphrase once, in the first terminal after login. ssh-add -l
+# exits 1 when the agent runs but holds no keys (2 = no agent: skip). Ctrl+C
+# skips; AddKeysToAgent in ~/.ssh/config then asks on first git use instead.
+if [[ -f ~/.ssh/id_ed25519 ]]; then
+  ssh-add -l &>/dev/null
+  [[ $? -eq 1 ]] && ssh-add ~/.ssh/id_ed25519
+fi
+
 # Machine-local secrets and overrides (untracked; see .chezmoiignore)
 [[ -f ~/.bashrc.local ]] && source ~/.bashrc.local

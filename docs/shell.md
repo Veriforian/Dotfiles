@@ -13,6 +13,7 @@ Source: `dot_bashrc` → `~/.bashrc`. Omarchy's defaults come from `$OMARCHY_PAT
 | `CUDA_HOME`, CUDA `PATH` / `LD_LIBRARY_PATH` | CUDA toolkit at `/opt/cuda` (desktop) |
 | `alias ws` | `cd ~/Documents/Workspace/Professional` |
 | `alias fixVesk` | Restart xdg-desktop-portal(-hyprland), pipewire, wireplumber (Vesktop screen share / audio fix) |
+| `SSH_AUTH_SOCK`, `ssh-add` once | systemd ssh-agent; asks for the key passphrase in the first terminal after login (see [tools](tools.md#ssh-agent-git-lazygit)) |
 | `source ~/.bashrc.local` | Machine-local secrets (last line) |
 
 ## Secrets: `~/.bashrc.local`

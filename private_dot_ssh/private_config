@@ -1,0 +1,6 @@
+# Keys themselves are NOT tracked by chezmoi; only this file is.
+Host *
+    # First use of a key adds it to the agent, so the passphrase is asked once
+    # per login session (agent: systemd user ssh-agent.socket, see docs/tools.md).
+    AddKeysToAgent yes
+    IdentityFile ~/.ssh/id_ed25519

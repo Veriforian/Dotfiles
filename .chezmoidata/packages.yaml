@@ -31,3 +31,6 @@ packages:
     # Discord client; Vencord's CustomIdle keeps presence Online (docs/desktop.md).
     # Started minimized by hypr/autostart.lua; settings via modify_settings.json.
     - vesktop-bin
+    # Monitor layout TUI (github.com/erans/hyprmon); prebuilt for x86_64 + aarch64.
+    # Writes ~/.config/hypr/hyprmon.lua; see docs/desktop.md#monitors.
+    - hyprmon-bin

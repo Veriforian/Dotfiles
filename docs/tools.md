@@ -7,6 +7,23 @@
 Omarchy default plus a `[user]` block (name + work email).
 Gap: the email is hardcoded and doesn't use the per-machine `email` prompt (see [machines](machines.md#known-gaps)).
 
+## SSH agent (git, lazygit)
+
+Goal: type the key passphrase once per login, not on every commit, pull or push.
+
+| Piece | Source | Does |
+|---|---|---|
+| `ssh-agent.socket` (systemd user unit, OpenSSH) | enabled by `run_onchange_after_50-ssh-agent.sh.tmpl` | One agent per login at `$XDG_RUNTIME_DIR/ssh-agent.socket`, started on first use |
+| `~/.config/environment.d/10-ssh-agent.conf` | `dot_config/environment.d/` | `SSH_AUTH_SOCK` for apps launched from Hyprland (takes effect after the next login) |
+| `~/.bashrc` | `dot_bashrc` | Same `SSH_AUTH_SOCK` default for shells. The first terminal with an empty agent runs `ssh-add` once |
+| `~/.ssh/config` | `private_dot_ssh/private_config` | `AddKeysToAgent yes`: if the key isn't loaded, the first git/ssh use asks once and caches it |
+
+- Keys (`~/.ssh/id_*`) are **not** in chezmoi. Copy or generate them per machine.
+- `Ctrl+C` at the terminal prompt skips it. The next git operation (lazygit too) asks once instead.
+- Keys stay loaded until logout. `ssh-add -l` lists them, `ssh-add -D` forgets them.
+- Alternative not used: `gcr-ssh-agent` (GNOME keyring) can store the passphrase so you're never asked, similar to macOS
+  `UseKeychain`. It's not used here because this setup is meant to ask once per login.
+
 ## mise (`~/.config/mise/config.toml`)
 
 Global toolchains, all `latest`: `claude`, `codex`, `gh`, `go`, `node`.

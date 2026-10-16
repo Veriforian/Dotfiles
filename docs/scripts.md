@@ -21,6 +21,7 @@ To make a script react to another file, embed that file's hash in a comment:
 | `run_onchange_before_10-install-packages.sh.tmpl` | `omarchy-pkg-add` exists | `packages.yaml` changes | `omarchy-pkg-add <pacman list>`, then `omarchy-pkg-aur-add <aur list>` (yay); both skip installed packages |
 | `run_onchange_after_20-mise-install.sh.tmpl` | `mise` exists | `~/.config/mise/config.toml` changes | `mise install` |
 | `run_onchange_after_30-nvim-plugins.sh.tmpl` | `nvim` exists | `lazy-lock.json` changes | `nvim --headless "+Lazy! restore"` (10 min timeout) |
+| `run_onchange_after_50-ssh-agent.sh.tmpl` | `systemctl` + OpenSSH's `ssh-agent.socket` unit exist | Script edited | `systemctl --user enable --now ssh-agent.socket` if not enabled. User unit, no sudo (see [tools](tools.md#ssh-agent-git-lazygit)) |
 | `run_onchange_after_40-omarchy-theme.sh.tmpl` | `omarchy-theme-set` exists | Script edited (e.g. `theme=`) | `omarchy theme set one-dark-pro` unless already current. Outside a Hyprland session it prints a reminder and skips. The theme is cloned by `.chezmoiexternal.toml.tmpl`, and externals are written before `after_` scripts run |
 
 ## Packages (`.chezmoidata/packages.yaml`)
@@ -41,6 +42,7 @@ To make a script react to another file, embed that file's hash in a comment:
 
 | Package | Why |
 |---|---|
+| `hyprmon-bin` | Monitor layout TUI with Lua config support (see [desktop](desktop.md#monitors)). Not `hyprmon`, which is a different, x86_64-only tool |
 | `vesktop-bin` | Discord client (aarch64 build available). CustomIdle keeps presence Online (see [desktop](desktop.md#discord-presence-vesktop--customidle)) |
 
 Language toolchains (node, go, …) live in mise instead (see [tools](tools.md#mise)).

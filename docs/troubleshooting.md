@@ -4,6 +4,14 @@
 
 Problems hit so far, newest first. Add new ones at the top with symptom → cause → fix.
 
+## git / lazygit asks for the SSH passphrase on every commit, pull or push
+
+- **Cause:** no SSH agent was running (`SSH_AUTH_SOCK` empty), so every ssh use decrypted the key from scratch.
+  Omarchy runs gnome-keyring without its SSH part, and OpenSSH's `ssh-agent.socket` was disabled.
+- **Fix:** enable the systemd user `ssh-agent.socket`, set `SSH_AUTH_SOCK`, and add `AddKeysToAgent yes` (see [tools](tools.md#ssh-agent-git-lazygit)).
+- **Check:** `echo $SSH_AUTH_SOCK` → `/run/user/1000/ssh-agent.socket`; `ssh-add -l` lists the key; `systemctl --user status ssh-agent.socket`.
+- **Still asked in an app opened from the launcher:** log out and back in once, so `environment.d` reaches the session.
+
 ## tmux: `prefix q` (reload) and `prefix ?` (keybindings) do nothing
 
 - **Symptom:** neither key does anything after the Mac config was merged in (commit `5451dbb`).
