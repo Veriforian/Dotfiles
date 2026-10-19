@@ -12,7 +12,7 @@
 | `work` | Prompt: "Is this a work machine" | Nothing yet |
 | `vm` | Auto: `systemd-detect-virt --vm` isn't `none` (Try Omarchy, OmacVM, UTM, any VM), or `/usr/share/try-omarchy` exists | `run_onchange_before_05-vm-network` |
 
-Useful built-ins: `.chezmoi.arch` (`amd64` / `arm64`), `.chezmoi.osRelease.id` (`arch` / `archarm`), `.chezmoi.hostname`.
+Useful built-ins: `.chezmoi.arch` (`amd64` / `arm64`), `.chezmoi.osRelease.id` (`arch` on the desktop, `omarchy` on Try Omarchy 1.0+, `archarm` on older ARM installs), `.chezmoi.hostname`.
 
 **Try Omarchy-only bits** don't use `.vm`. They check for their own files instead, e.g. `hypr/input.lua.tmpl` only
 `dofile()`s `/usr/share/try-omarchy/*-input.lua` if that file exists. Templates run with `missingkey=error`, so a new
@@ -26,7 +26,7 @@ Inspect them with `chezmoi data`. Re-run the prompts with `chezmoi init`. Answer
 |---|---|---|
 | `hypr/input.lua` | Stock comments only | Try Omarchy only: also loads `/usr/share/try-omarchy/pinch-input.lua` and `apple-keyboard-input.lua` |
 | DNS | System default | DNS over TLS to Cloudflare/Google; DHCP DNS ignored |
-| Pacman mirrors | Arch mirrors | `ca.us` → `tw2` → geo redirect (only when `osRelease.id` is `archarm`) |
+| Pacman mirrors | Arch mirrors | Try Omarchy 1.0+: Omarchy's `arm-mirror.omarchy.org` (left alone). `ca.us` → `tw2` → geo redirect only when `osRelease.id` is `archarm` (older VMs, OmacVM) |
 | mise | `mise` package | `try-omarchy-mise` package |
 | CUDA paths in `.bashrc` | Meaningful | Harmless no-op (not yet templated) |
 | Mac share link | None | Try Omarchy only: `~/Documents/Shared` → `/mnt/mac` (see [below](#mac-share-try-omarchy)) |
@@ -42,7 +42,7 @@ Inspect them with `chezmoi data`. Re-run the prompts with `chezmoi init`. Answer
 ## Other VMs (OmacVM, UTM)
 
 `.vm` is true there too, so they get the network script. ARM mirrors are only used on Arch Linux ARM. They don't get
-the Try Omarchy input includes. Dual-display research: `~/OmWorkspace/notes/dual-display/` (outside the repo).
+the Try Omarchy input includes. Dual-display research: `notes/dual-display/` on the Mac share (`~/OmWorkspace` or `~/Documents/Shared`; outside the repo).
 Run `chezmoi init` once on an existing machine after this change, so `vm` is re-detected (on Try Omarchy it stays `true`).
 
 ## Try Omarchy VM notes
@@ -67,6 +67,12 @@ We add a second link, `~/Documents/Shared` → `/mnt/mac`:
 - Deployed only where `/usr/bin/omarchy-native-mac-share` exists (`.chezmoiignore` template).
 - Omarchy's service only cleans up links directly in `~`, so it never touches `~/Documents/Shared`.
 - Check: `readlink ~/Documents/Shared`; `journalctl --user -u mac-share-documents-link`.
+- A symlink, not a bind mount: the pre-1.0 VM bind-mounted it with a sudo-installed system unit
+  (`try-omarchy-shared-bind.service`). The symlink needs no root, and nothing here needs a real path.
+- **Use the share for moving files, not for repos** (tested 2026-10-19 on the 9p mount): unix sockets fail
+  (`EOPNOTSUPP`), writable shared `mmap` fails (`EINVAL`: SQLite WAL, LMDB), it's **case-insensitive** (APFS underneath),
+  Mac-side edits don't trigger inotify, and it's slow for git and `node_modules`. Exec bits, relative symlinks, hard
+  links, flock/fcntl, fsync and atomic rename do work.
 
 ## Moving the Mac workspace
 
@@ -91,6 +97,25 @@ bash ~/.local/share/chezmoi/tools/import-workspace.sh ~/OmWorkspace/ws-migrate/e
 ```
 
 Keep the workspace on the VM disk, not the share: 9p has no writable shared mmap, and it's slow for many small files.
+
+## Try Omarchy updates and resets
+
+- **Normal app updates keep the VM.** Replacing the Mac app never touches the VM disk; the guest updates itself with
+  `omarchy update` (Snapper snapshot of `/` first, listed in the Limine boot menu).
+- **Some releases need a new VM.** v1.0 (2026-10-17) switched from direct-boot ext4 VMs to UEFI/btrfs VMs under
+  `~/Library/Application Support/Try Omarchy/VM/v1`, and started a fresh VM. Earlier releases did the same for new
+  factory images. Read the [release notes](https://github.com/omacom/try-omarchy/releases) for "new or reset VM" before
+  updating. If you see it, push everything, or duplicate `VM/v1` in Finder first (an instant APFS clone).
+- **After a fresh VM:** the old disk is attached read-only (`/dev/vdb`, serial `omarchy-previous`) while the Mac's
+  `disks/` folder exists. *Import previous VM* (`try-omarchy-import-previous`) copies visible home folders and
+  `.ssh`, `.gnupg`, git and gh config only. It skips `~/.config`, `~/.local` (including this repo!) and `~/.bashrc.local`.
+  Then:
+  1. `chezmoi init --apply git@github.com:Veriforian/Dotfiles.git`. Unpushed commits are **not** on GitHub.
+  2. `try-omarchy-import-previous --open` mounts the old disk at `/run/try-omarchy/previous-vm`. Copy back
+     `~/.bashrc.local`, `tools/`, unpushed commits (`git fetch /run/try-omarchy/previous-vm/home/veri/.local/share/chezmoi`)
+     and app settings, then `--close`.
+  3. `try-omarchy-import-previous --packages` reinstalls hand-installed repo packages.
+  4. Delete `disks/` on the Mac only once nothing else is needed.
 
 ## Known gaps
 

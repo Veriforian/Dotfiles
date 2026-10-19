@@ -40,6 +40,7 @@ To make a script react to another file, embed that file's hash in a comment:
 | `git-delta` | fzf-lua code-action previewer |
 | `stylua` | `stylua.toml` in the nvim config |
 | `imagemagick`, `python-pip` | snacks.image rendering |
+| `rsync` | *Development tools:* copying files in from the Mac share (see [machines](machines.md#moving-the-mac-workspace)) |
 | `wireguard-tools` | *Development tools:* work VPN (`wg`, `wg-quick`). See [tools](tools.md#work-vpn-wireguard) |
 | `jq` | `modify_` script for Vesktop's `settings.json` (see [desktop](desktop.md#discord-presence-vesktop--customidle)) |
 
