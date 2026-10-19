@@ -1,8 +1,36 @@
 # Troubleshooting
 
-[← README](../README.md) · Last updated: 2026-10-16
+[← README](../README.md) · Last updated: 2026-10-19
 
 Problems hit so far, newest first. Add new ones at the top with symptom → cause → fix.
+
+## AUR install: `PGP keys need importing … keyserver receive failed: No route to host`
+
+- **Seen:** installing `mullvad-vpn-bin` with yay on the Try Omarchy VM (2026-10-19). The workaround that day was
+  `--keyserver hkp://keys.openpgp.org`.
+- **Cause:** IPv6 doesn't work in the VM. QEMU's user-mode network gives the guest an IPv6 route (`via fe80::2`, address
+  `fec0::…`), but IPv6 traffic never leaves the host: `curl -6 https://keyserver.ubuntu.com` fails with exit 7, while
+  `curl -4` works. Keyservers publish IPv6 addresses, and `dirmngr` (which imports PGP keys for makepkg/yay) doesn't
+  fall back to IPv4 the way browsers and curl do. When it picks an IPv6 address, the import fails.
+  - Not caused by our DNS-over-TLS change: that only changes which DNS server answers, and the answers include IPv6
+    addresses either way.
+  - Confirmed by forcing dirmngr to IPv6 only (`disable-ipv4`) → "No keyserver available".
+  - It's intermittent: 6/6 fetches worked while Mullvad was connected.
+- **Fix:** `disable-ipv6` in `~/.gnupg/dirmngr.conf` on VMs (`private_dot_gnupg/dirmngr.conf.tmpl`). Then
+  `gpgconf --kill dirmngr`.
+- **If it still fails:** `gpg --keyserver hkps://keys.openpgp.org --recv-keys <fingerprint>`, then re-run yay.
+
+## Terminal opacity flips between transparent and opaque
+
+- **Symptom:** a terminal is sometimes 0.90 and sometimes fully opaque, changing on tmux pane switches or after a command.
+- **Cause:** Hyprland re-evaluates window rules when a window's title changes. tmux `set-titles` and the shell prompt
+  change it constantly. The terminal opacity rule matched Omarchy's `terminal` tag, which another rule sets (a dynamic
+  tag). On re-evaluation the tag-matched rule only applied **every other time**, while the catch-all
+  `".*" → opacity 1 1` always applied. Reproduced: consecutive title changes gave 0.9 → 1 → 0.9.
+- **Fix:** match terminals by class (`terminal_classes` in `hypr/looknfeel.lua`). The class never changes for a window.
+  It stayed at 0.9 / 0.85 over 6 title changes.
+- **Check:** `hyprctl getprop active opacity`; change the title with `printf '\033]2;x\007'` a few times and re-check.
+- **General rule:** don't key rules that must hold all the time (opacity etc.) on tags set by other rules.
 
 ## git / lazygit asks for the SSH passphrase on every commit, pull or push
 

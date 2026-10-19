@@ -1,6 +1,6 @@
 # Desktop
 
-[← README](../README.md) · Last updated: 2026-10-16
+[← README](../README.md) · Last updated: 2026-10-19
 
 Hyprland (Lua config), the Omarchy theme and the foot terminal. Defaults live in `/usr/share/omarchy/` (read-only); user overrides in `~/.config/`.
 
@@ -29,8 +29,11 @@ for no borders as well. For gaps between windows only, set `gaps_out` back to 10
 Omarchy's default is `0.985 / 0.96` on every window, and browsers get `1.0 / 0.985`. Two rules at the end of the file
 do this. They load after Omarchy's rules, and the last matching rule wins:
 - `o.window(".*", { opacity = "1 1" })`
-- `o.window({ tag = "terminal" }, ...)`. The `terminal` tag is Omarchy's, from `default/hypr/apps/terminals.lua`. It covers
-  foot, Alacritty, kitty, Ghostty, WezTerm and Omarchy's TUI windows (`org.omarchy.*`, `TUI.*`).
+- `o.window(terminal_classes, ...)`: matched by **class**, using the same list as Omarchy's `default/hypr/apps/terminals.lua`.
+  It covers foot, Alacritty, kitty, Ghostty, WezTerm and Omarchy's TUI windows (`org.omarchy.*`, `TUI.*`).
+  - Don't match on Omarchy's `terminal` tag. It's set by another rule, and on rule re-evaluation (every title change)
+    a tag-matched rule only applies every other time (see [troubleshooting](troubleshooting.md)).
+  - If Omarchy adds a terminal to `terminals.lua`, add it to `terminal_classes` too.
 - Tune the terminal by changing the two numbers. `Super+Backspace` still toggles a single window opaque.
 - Blur stays off (Omarchy default), so the wallpaper shows through sharp. `decoration.blur.enabled = true` would only
   blur the terminal, since nothing else is translucent.

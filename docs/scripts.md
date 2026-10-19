@@ -1,6 +1,6 @@
 # Scripts & packages
 
-[← README](../README.md) · Last updated: 2026-10-16
+[← README](../README.md) · Last updated: 2026-10-19
 
 ## How `run_onchange_` works
 
@@ -44,16 +44,35 @@ To make a script react to another file, embed that file's hash in a comment:
 | Package | Why |
 |---|---|
 | `hyprmon-bin` | Monitor layout TUI with Lua config support (see [desktop](desktop.md#monitors)). Not `hyprmon`, which is a different, x86_64-only tool |
+| `mullvad-vpn-bin` | Mullvad VPN app + daemon (see [tools](tools.md#mullvad-vpn)) |
 | `vesktop-bin` | Discord client (aarch64 build available). CustomIdle keeps presence Online (see [desktop](desktop.md#discord-presence-vesktop--customidle)) |
 
 Language toolchains (node, go, …) live in mise instead (see [tools](tools.md#mise)).
 
-### Adding or removing a package
+### Adding an app (checklist)
 
-1. Edit `.chezmoidata/packages.yaml` (`pacman:` for repo packages, `aur:` for AUR) and add a comment saying why.
-2. On the VM, check that it exists for aarch64: `pacman -Si <pkg>`, or `yay -Si <pkg>` for AUR (look at `Architecture`).
-3. `chezmoi apply` installs it.
-4. Update the table above and the [changelog](changelog.md).
+Every app must work on all machines: Try Omarchy VM and OmacVM (aarch64), and the desktop (x86_64).
+
+1. **Find the package and check both architectures.**
+   - Repo: `pacman -Si <pkg>`. `Architecture` must be `any` or available on both.
+   - AUR: `yay -Si <pkg>`, then `yay -Gp <pkg> | grep -E '^(arch|source)'`. Prefer a `-bin` package that lists both
+     `x86_64` and `aarch64` (e.g. `hyprmon-bin`, `vesktop-bin`, `mullvad-vpn-bin`).
+   - Watch for same-name traps: AUR `hyprmon` is a different, x86_64-only tool.
+   - On Try Omarchy, `omarchy-pkg-*` refuses packages it knows aren't available on aarch64.
+2. **Add it to `.chezmoidata/packages.yaml`** under `pacman:` or `aur:`, with a comment saying why.
+   Changing the list re-runs the install script on the next `chezmoi apply`, which skips anything already installed.
+3. **Services.** Check whether the package enables its own:
+   `grep -n systemctl /var/lib/pacman/local/<pkg>-*/install`. Mullvad's does.
+   - If it doesn't, enable it in a `run_onchange_after_*` script, like `50-ssh-agent`.
+   - System units need sudo, which the user runs. User units (`systemctl --user`) don't.
+4. **Autostart.** Either the app's own `.desktop` file in `~/.config/autostart/`, or an `o.launch_on_start(...)` line in
+   `dot_config/hypr/autostart.lua` (see Vesktop).
+5. **Config.** Track it with `chezmoi add <file>`.
+   - If the app rewrites the file itself, use a `modify_` script that sets only your keys (see `modify_settings.json`
+     for Vesktop).
+   - **Never add secrets** (account numbers, tokens, API keys). Log in by hand, or put them in `~/.bashrc.local`.
+6. **Docs, same change:** the package table above, the doc for that area, and the [changelog](changelog.md).
+7. **Test:** `chezmoi diff`, then `chezmoi apply`. On a fresh machine `chezmoi init --apply` should give a working app.
 
 Removing a package from the list does **not** uninstall it. Do that with `omarchy pkg remove <pkg>`.
 

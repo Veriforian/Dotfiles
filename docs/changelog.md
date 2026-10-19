@@ -4,6 +4,13 @@
 
 Config changes, newest first. One line per change; link to the doc that describes it.
 
+## 2026-10-19
+
+- Mullvad VPN (`mullvad-vpn-bin`, AUR) is a default package. [tools](tools.md#mullvad-vpn)
+- VMs: `~/.gnupg/dirmngr.conf` `disable-ipv6`; fixes AUR PGP key imports failing over the VM's dead IPv6. [troubleshooting](troubleshooting.md)
+- Scripts doc: checklist for adding an app. [scripts](scripts.md#adding-an-app-checklist)
+- Desktop: terminal opacity rule matches by class, not by the dynamic `terminal` tag; fixes opacity flipping on title changes. [troubleshooting](troubleshooting.md)
+
 ## 2026-10-16
 
 - Machines: `.vm` now detects any VM (`systemd-detect-virt`), e.g. OmacVM and UTM. Try Omarchy input includes are guarded by their own files, and ARM mirrors only apply on `archarm`. [machines](machines.md)

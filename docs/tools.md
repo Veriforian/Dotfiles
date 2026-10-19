@@ -1,6 +1,6 @@
 # Tools
 
-[← README](../README.md) · Last updated: 2026-10-16
+[← README](../README.md) · Last updated: 2026-10-19
 
 ## git (`~/.config/git/config`)
 
@@ -23,6 +23,26 @@ Goal: type the key passphrase once per login, not on every commit, pull or push.
 - Keys stay loaded until logout. `ssh-add -l` lists them, `ssh-add -D` forgets them.
 - Alternative not used: `gcr-ssh-agent` (GNOME keyring) can store the passphrase so you're never asked, similar to macOS
   `UseKeychain`. It's not used here because this setup is meant to ask once per login.
+
+## Mullvad VPN
+
+- **Package:** `mullvad-vpn-bin` (AUR, aarch64 + x86_64) pulls in `mullvad-vpn-daemon-bin`. The daemon's install script
+  runs `systemctl enable --now mullvad-daemon` and `enable mullvad-early-boot-blocking`.
+- **Autostart (GUI/tray):** `~/.config/autostart/mullvad-vpn.desktop` → `/usr/share/applications/mullvad-vpn.desktop`,
+  tracked as `dot_config/autostart/symlink_mullvad-vpn.desktop`. It's the same symlink the app's own
+  *Launch app on start-up* setting creates. If you turn that setting off, chezmoi shows the symlink as missing; then
+  `chezmoi forget` it or switch the setting back on.
+- **Not in chezmoi:** account login and app settings (`/etc/mullvad-vpn/settings.json`, root-owned; holds account state).
+  On a new machine, log in once (`mullvad account login` or the GUI) and set auto-connect there (`mullvad auto-connect set on`).
+- **DNS:** when connected, systemd-resolved sends lookups over the tunnel to Mullvad's `10.64.0.1` (link `wg0-mullvad`,
+  `~.`). The VM's DNS-over-TLS servers (global) are only used when the VPN is off. Check with `resolvectl query example.com`
+  (should say `link: wg0-mullvad`).
+- **Install note:** the package's install step calls `updatedb`, which isn't installed (no `locate`). That message is harmless.
+
+## gpg / dirmngr (`~/.gnupg/dirmngr.conf`, VMs only)
+
+`private_dot_gnupg/dirmngr.conf.tmpl` sets `disable-ipv6` when `.vm`. It renders empty on the desktop, so no file is
+created there. Why: see [troubleshooting](troubleshooting.md). After it changes, restart dirmngr with `gpgconf --kill dirmngr`.
 
 ## mise (`~/.config/mise/config.toml`)
 

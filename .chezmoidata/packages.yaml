@@ -34,3 +34,6 @@ packages:
     # Monitor layout TUI (github.com/erans/hyprmon); prebuilt for x86_64 + aarch64.
     # Writes ~/.config/hypr/hyprmon.lua; see docs/desktop.md#monitors.
     - hyprmon-bin
+    # Mullvad VPN app + daemon (pulls mullvad-vpn-daemon-bin; its install script
+    # enables mullvad-daemon). Account login is manual, never in this repo.
+    - mullvad-vpn-bin

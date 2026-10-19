@@ -1,0 +1,8 @@
+{{- if .vm -}}
+# VMs only (QEMU user-mode networking: Try Omarchy, OmacVM). The VM gets an
+# IPv6 route (fe80::2 / fec0::) but IPv6 never leaves the host, so whenever
+# dirmngr picks a keyserver's IPv6 address, key imports fail ("No route to
+# host"), e.g. yay/makepkg importing an AUR package's PGP key. IPv4 works.
+# Takes effect when dirmngr next starts: gpgconf --kill dirmngr
+disable-ipv6
+{{ end -}}

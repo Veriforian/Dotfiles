@@ -54,5 +54,13 @@ hl.config({
 -- Omarchy tags every window "default-opacity" (0.985 focused / 0.96 unfocused)
 -- and gives browsers 1.0 / 0.985. These load after Omarchy's rules, so they win.
 -- SUPER + BACKSPACE (toggle window transparency) still works per window.
+--
+-- Terminals are matched by class, NOT by Omarchy's "terminal" tag: that tag is
+-- set by another rule, and when Hyprland re-evaluates rules on a title change
+-- (every tmux pane switch / shell prompt) a tag-matched rule only applies every
+-- other time, so terminals flickered between 0.90 and fully opaque. Class never
+-- changes. Same list as Omarchy's default/hypr/apps/terminals.lua.
+local terminal_classes =
+  "(Alacritty|kitty|com\\.mitchellh\\.ghostty|foot|org\\.codeberg\\.dnkl\\.foot|wezterm|org\\.omarchy\\..*|TUI\\..*)"
 o.window(".*", { opacity = "1 1" })
-o.window({ tag = "terminal" }, { opacity = "0.90 0.85" })
+o.window(terminal_classes, { opacity = "0.90 0.85" })
