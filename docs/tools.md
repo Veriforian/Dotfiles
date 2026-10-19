@@ -122,7 +122,9 @@ created there. Why: see [troubleshooting](troubleshooting.md). After it changes,
 
 ## mise (`~/.config/mise/config.toml`)
 
-Global toolchains, all `latest`: `claude`, `codex`, `gh`, `go`, `node`.
+Global toolchains: `claude`, `codex`, `gh`, `go`, `node` (all `latest`) and `rust` (`stable`).
+- Rust: mise installs it with rustup (`~/.rustup`, `~/.cargo`), so `rustup component add rust-analyzer` / `rustup update`
+  work as usual. No `. ~/.cargo/env` in `.bash_profile`: mise puts `cargo`/`rustc` on PATH.
 Editing this file re-runs `mise install` on the next `chezmoi apply` (see [scripts](scripts.md)).
 On the VM, mise comes from the `try-omarchy-mise` package.
 

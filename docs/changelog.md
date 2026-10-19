@@ -6,6 +6,7 @@ Config changes, newest first. One line per change; link to the doc that describe
 
 ## 2026-10-19
 
+- mise: `rust = "stable"` (rustup-managed). The pre-1.0 VM had a hand-installed rustup. [tools](tools.md#mise-configmiseconfigtoml)
 - Recovered from the pre-1.0 Try Omarchy VM: `rsync` package and 9p share findings (lost unpushed commit); docs on Try Omarchy resets and recovery; `archarm` mirror notes corrected for the `omarchy` OS id. [machines](machines.md#try-omarchy-updates-and-resets)
 - Try Omarchy: `~/Documents/Shared` → `/mnt/mac` via user unit `mac-share-documents-link` + `run_onchange_after_60-mac-share-link`. [machines](machines.md#mac-share-try-omarchy)
 - Workspace migration tools restored to local-only `tools/` (new `.gitignore`, `.chezmoiignore`); documented. [machines](machines.md#moving-the-mac-workspace)
