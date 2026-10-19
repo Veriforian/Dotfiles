@@ -1,0 +1,19 @@
+{{- if and .work (lookPath "omarchy-setup-security-sudoless-docker") -}}
+#!/bin/bash
+# Work machines: run `docker` without sudo (Colima-like convenience on the Mac).
+# Omarchy keeps users out of the docker group on purpose: membership is
+# root-equivalent. This opts in through Omarchy's own command, which shows the
+# warning, asks yes/no and runs sudo. Takes effect after a reboot.
+# Undo: omarchy-remove-security-sudoless-docker. Docs: docs/tools.md#docker
+set -euo pipefail
+
+if id -nG "$USER" | tr ' ' '\n' | grep -qx docker; then
+  exit 0
+fi
+
+echo "chezmoi: enabling sudoless Docker (work machine); Omarchy will ask to confirm"
+OMARCHY_DEFER_REBOOT=1 omarchy-setup-security-sudoless-docker
+if id -nG "$USER" | tr ' ' '\n' | grep -qx docker; then
+  echo "chezmoi: reboot to use docker without sudo (omarchy-system reboot)"
+fi
+{{ end -}}

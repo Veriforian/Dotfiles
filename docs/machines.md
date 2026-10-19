@@ -87,13 +87,15 @@ A copy lives on the share at `~/OmWorkspace/ws-migrate/`. That copy survives a V
 | `export-workspace.sh <workspace> <empty-dir>` | Mac | Small export: `repos.tsv`, bundles of unpushed commits, patches of uncommitted changes, `extras.tar.zst` (ignored/untracked files) |
 | `import-workspace.sh <export-dir> <workspace>` | VM | Clones from remotes in parallel, restores unpushed commits/branches, unpacks extras, re-applies patches. Safe to re-run |
 
+Full usage, what's skipped and test results: `tools/README.md`. Import checks SSH access first (both GitHub and
+GitLab keys must work: see [tools](tools.md#ssh-agent-git-lazygit)), and re-runs resume unfinished repos.
 Full usage, what's skipped and test results: `tools/README.md`.
 
 The current export (2026-10-19, 63 repos, 11.5 GB of extras) is at `~/OmWorkspace/ws-migrate/export`. Rebuild the VM
-workspace from it with:
+workspace from it (blobless clones keep big histories like QEMU from timing out) with:
 
 ```bash
-bash ~/.local/share/chezmoi/tools/import-workspace.sh ~/OmWorkspace/ws-migrate/export ~/Documents/Workspace
+CLONE_ARGS="--filter=blob:none" bash ~/.local/share/chezmoi/tools/import-workspace.sh ~/OmWorkspace/ws-migrate/export ~/Documents/Workspace
 ```
 
 Keep the workspace on the VM disk, not the share: 9p has no writable shared mmap, and it's slow for many small files.

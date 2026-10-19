@@ -16,9 +16,13 @@ Goal: type the key passphrase once per login, not on every commit, pull or push.
 | `ssh-agent.socket` (systemd user unit, OpenSSH) | enabled by `run_onchange_after_50-ssh-agent.sh.tmpl` | One agent per login at `$XDG_RUNTIME_DIR/ssh-agent.socket`, started on first use                    |
 | `~/.config/environment.d/10-ssh-agent.conf`     | `dot_config/environment.d/`                          | `SSH_AUTH_SOCK` for apps launched from Hyprland (takes effect after the next login)                 |
 | `~/.bashrc`                                     | `dot_bashrc`                                         | Same `SSH_AUTH_SOCK` default for shells. The first terminal with an empty agent runs `ssh-add` once |
-| `~/.ssh/config`                                 | `private_dot_ssh/private_config`                     | `AddKeysToAgent yes`: if the key isn't loaded, the first git/ssh use asks once and caches it        |
+| `~/.ssh/config`                                 | `private_dot_ssh/private_config`                     | `AddKeysToAgent yes`: if the key isn't loaded, the first git/ssh use asks once and caches it. Per-host keys (below) |
 
 - Keys (`~/.ssh/id_*`) are **not** in chezmoi. Copy or generate them per machine.
+- **Two keys:** `id_ed25519` (personal, passphrase, GitHub and everything else) and `id_gitlab_ed25519` (work GitLab,
+  no passphrase). `Host gitlab.com` uses only the GitLab key (`IdentitiesOnly yes`), so GitLab works without the
+  agent and never asks for the personal key's passphrase. `Host * !gitlab.com` gets the personal key. Check:
+  `ssh -G gitlab.com | grep identityfile`, `ssh -T git@gitlab.com` → "Welcome to GitLab".
 - `Ctrl+C` at the terminal prompt skips it. The next git operation (lazygit too) asks once instead.
 - Keys stay loaded until logout. `ssh-add -l` lists them, `ssh-add -D` forgets them.
 - Alternative not used: `gcr-ssh-agent` (GNOME keyring) can store the passphrase so you're never asked, similar to macOS
@@ -127,6 +131,34 @@ Global toolchains: `claude`, `codex`, `gh`, `go`, `node` (all `latest`) and `rus
   work as usual. No `. ~/.cargo/env` in `.bash_profile`: mise puts `cargo`/`rustc` on PATH.
 Editing this file re-runs `mise install` on the next `chezmoi apply` (see [scripts](scripts.md)).
 On the VM, mise comes from the `try-omarchy-mise` package.
+
+**Node versions per project (replaces nvm):** `[settings] idiomatic_version_file_enable_tools = ["node"]` makes mise
+read `.nvmrc` / `.node-version`. `cd` into a project and its Node version is active (the switch happens at the next
+prompt). nvm isn't installed: alongside mise it would fight over PATH, and mise's prompt hook would undo `nvm use`.
+
+| nvm | mise |
+|---|---|
+| `nvm install` (reads `.nvmrc`) | `mise install` in the project |
+| `nvm use 20` (this shell) | `mise shell node@20` |
+| `nvm alias default 20` | `mise use -g node@20` (global is `latest` here) |
+| `nvm ls` | `mise ls node` |
+
+Installed for the work repos (2026-10-19): Node 8 (checkpeople) and 16 (cp-wl, crm, information). Check with
+`mise ls --current node` in the project.
+
+## Docker
+
+Omarchy installs Docker (`docker`, `docker-compose`, `docker-buildx`; daemon started on demand by `docker.socket`).
+**Colima isn't used:** on Linux, containers run natively, and Colima would only add a VM, which runs in slow software
+emulation here (Try Omarchy has no nested virtualization, so no `/dev/kvm`).
+
+- **Sudoless on work machines:** `run_onchange_after_65-sudoless-docker` (`.work` = true) runs Omarchy's
+  `omarchy-setup-security-sudoless-docker`. It warns, asks yes/no, then adds you to the `docker` group (sudo). It
+  takes effect **after a reboot**. Omarchy's default is `sudo docker` because the group is **root-equivalent**: any
+  process running as you can `docker run -v /:/host` without a password. Undo: `omarchy-remove-security-sudoless-docker`.
+- Considered: rootless Docker (`docker-rootless-extras`, AUR). It's safer, but some setups behave differently (ports
+  below 1024, host networking).
+- Check: `docker run --rm hello-world`; `id -nG | grep docker`.
 
 ## tmux (`~/.config/tmux/tmux.conf`)
 

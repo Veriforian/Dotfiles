@@ -1,6 +1,15 @@
 # Keys themselves are NOT tracked by chezmoi; only this file is.
+
+# Work GitLab: its own key, and only that key (IdentitiesOnly), so ssh never
+# falls back to the personal key or asks for its passphrase here.
+Host gitlab.com
+    IdentityFile ~/.ssh/id_gitlab_ed25519
+    IdentitiesOnly yes
+
 Host *
     # First use of a key adds it to the agent, so the passphrase is asked once
     # per login session (agent: systemd user ssh-agent.socket, see docs/tools.md).
     AddKeysToAgent yes
+
+Host * !gitlab.com
     IdentityFile ~/.ssh/id_ed25519

@@ -7,5 +7,10 @@ node = "latest"
 # rustup-managed: rustc, cargo, rustfmt, clippy; `cargo install` bins in ~/.cargo/bin
 rust = "stable"
 
+[settings]
+# Read projects' .nvmrc / .node-version, like nvm: cd into a project and its
+# Node version is used (install it once with `mise install`). Replaces nvm.
+idiomatic_version_file_enable_tools = ["node"]
+
 [settings.upgrade]
 auto_prune = false

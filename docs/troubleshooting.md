@@ -4,6 +4,22 @@
 
 Problems hit so far, newest first. Add new ones at the top with symptom → cause → fix.
 
+## Workspace import: GitLab repos "import forever", none arrive
+
+- **Symptom:** `import-workspace.sh` printed `cloning …` for every repo. Personal (GitHub) repos arrived; the work
+  GitLab repos never did, and nothing seemed to happen for a long time.
+- **Causes:**
+  - `~/.ssh/config` only named `id_ed25519` (personal). The GitLab key `id_gitlab_ed25519` wasn't in the config or
+    the agent at the time, so every `git@gitlab.com` clone got `Permission denied (publickey)` within seconds.
+  - The old script showed results only after **every** job was done. A 30-minute QEMU clone, then the 11.5 GB
+    extras unpack (no progress output), made the failures look like a hang. The run was stopped during the unpack,
+    so patches were never applied, and a re-run would have skipped the half-restored repos.
+- **Fix:** `Host gitlab.com` → `IdentityFile ~/.ssh/id_gitlab_ed25519`, `IdentitiesOnly yes`
+  ([tools](tools.md#ssh-agent-git-lazygit)). The import script now checks SSH access before cloning, never waits on
+  a prompt, prints each result as it finishes, shows unpack progress, clones parents before nested repos, and
+  resumes unfinished repos ([machines](machines.md#moving-the-mac-workspace)).
+- **Check:** `ssh -T git@gitlab.com` → "Welcome to GitLab, @…", also with `SSH_AUTH_SOCK=` (no agent).
+
 ## Terminal opacity flips again after an Omarchy update (VM)
 
 - **Symptom:** after an Omarchy update or reinstall on a VM, terminals flip between 0.90 and opaque again on tmux pane
