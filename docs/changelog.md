@@ -6,6 +6,8 @@ Config changes, newest first. One line per change; link to the doc that describe
 
 ## 2026-10-19
 
+- Postgres: 22 Homebrew databases (PG 14) restored into `postgres18`. `pgadmin` launcher (Docker, desktop mode, host network, `pgadmin import`). Docker + Mullvad rules revised: container internet left unmarked, MSS clamping. [tools](tools.md#pgadmin)
+- Docker + Mullvad: bridge traffic gets Mullvad's firewall mark (`run_onchange_after_56`); PostgreSQL 18 in Docker; `tools/pg-export.sh` / `pg-import.sh` move Homebrew databases; `.bashrc` `PGHOST=127.0.0.1`. [tools](tools.md#postgresql)
 - nvim: `chezmoi apply` restarts running Neovims (`:restart`, session kept) when the nvim config changes; `nvim-restart-all` command. [neovim](neovim.md#reloading-running-neovims-after-a-config-change)
 - nvim: Lazy menu `<leader>l` → `<leader>ll`, so `<leader>ld` (Lazydocker) opens at once. [neovim](neovim.md)
 - mise reads `.nvmrc` / `.node-version` (instead of nvm). Docker: sudoless opt-in on work machines (`run_onchange_after_65`); Colima not used on Linux. [tools](tools.md#docker)

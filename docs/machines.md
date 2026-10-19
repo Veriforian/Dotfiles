@@ -87,7 +87,8 @@ A copy lives on the share at `~/OmWorkspace/ws-migrate/`. That copy survives a V
 | `export-workspace.sh <workspace> <empty-dir>` | Mac | Small export: `repos.tsv`, bundles of unpushed commits, patches of uncommitted changes, `extras.tar.zst` (ignored/untracked files) |
 | `import-workspace.sh <export-dir> <workspace>` | VM | Clones from remotes in parallel, restores unpushed commits/branches, unpacks extras, re-applies patches. Safe to re-run |
 
-Full usage, what's skipped and test results: `tools/README.md`. Import checks SSH access first (both GitHub and
+Full usage, what's skipped and test results: `tools/README.md`.
+PostgreSQL moves the same way: `pg-export.sh` (Mac) → `pg-import.sh` (VM). See [tools](tools.md#postgresql). Import checks SSH access first (both GitHub and
 GitLab keys must work: see [tools](tools.md#ssh-agent-git-lazygit)), and re-runs resume unfinished repos.
 Full usage, what's skipped and test results: `tools/README.md`.
 

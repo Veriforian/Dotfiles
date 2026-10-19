@@ -1,6 +1,6 @@
 # Shell
 
-[← README](../README.md) · Last updated: 2026-10-16
+[← README](../README.md) · Last updated: 2026-10-19
 
 Source: `dot_bashrc` → `~/.bashrc`. Omarchy's defaults come from `$OMARCHY_PATH/default/bash/rc`; everything below overrides or extends them.
 
@@ -36,3 +36,8 @@ Upgrade path: move these into a password manager and render them with `onepasswo
   Fix: `export GOPRIVATE="gitlab.com/trazi-ventures/*,github.com/TetonDigitalLLC/*"`.
 - `$(go env GOPATH)` prints an error in shells where go isn't installed yet (e.g. before `mise install`).
 - `.bashrc` is not a template, so use `chezmoi re-add` after editing it live. If it becomes `.tmpl`, switch to `chezmoi edit`.
+
+## PostgreSQL client
+
+`export PGHOST="${PGHOST:-127.0.0.1}"`: Postgres runs in Docker, so `psql`, `pg_dump` and `createdb` connect over TCP
+(see [tools](tools.md#postgresql)).

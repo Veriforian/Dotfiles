@@ -1,0 +1,98 @@
+{{- if and (lookPath "mullvad") (lookPath "nft") (lookPath "docker") -}}
+#!/bin/bash
+# Docker alongside the Mullvad app. Mullvad's firewall drops traffic to private
+# ranges (local network sharing off), which includes Docker's bridges, so
+# published ports (VM -> container) and container internet access both fail.
+# This installs a boot-time nftables table that gives traffic BETWEEN the VM
+# and its containers Mullvad's firewall mark, leaves container internet
+# traffic unmarked (it goes out through the tunnel as Mullvad intends), and
+# clamps TCP MSS to the tunnel MTU. Details in the rules below.
+# https://mullvad.net/en/help/split-tunneling-with-linux-advanced
+# Sudo only if the installed files differ. Docs: docs/tools.md#docker-and-mullvad
+set -euo pipefail
+
+rules=/etc/mullvad-allow-docker.nft
+unit=/etc/systemd/system/mullvad-allow-docker.service
+
+desired_rules=$(cat <<'NFT'
+#!/usr/bin/nft -f
+# Installed by chezmoi (run_onchange_after_56-docker-mullvad).
+# Mullvad's firewall mark (ct mark 0x00000f41) for traffic between the VM and
+# its containers only. Container INTERNET traffic is deliberately not marked:
+# Mullvad's forward chain already lets it out through the tunnel, while its
+# prerouting rule ("iif != wg0-mullvad ct mark 0xf41 -> meta mark 0x6d6f6c65")
+# would route marked traffic AROUND the tunnel (and its nat rule drops marked
+# traffic leaving through it). Priorities per Mullvad's docs: -200..0.
+table inet mullvad-allow-docker
+delete table inet mullvad-allow-docker
+table inet mullvad-allow-docker {
+  # Connections the VM opens to containers (published ports, container IPs).
+  # Only NEW: "packet too big" ICMP for containers' internet flows must not
+  # mark those flows.
+  chain out {
+    type filter hook output priority -10; policy accept;
+    oifname "docker0" ct state new ct mark set 0x00000f41
+    oifname "br-*" ct state new ct mark set 0x00000f41
+  }
+  # Containers -> the VM (DNS on 172.17.0.1, VM ports) and container ->
+  # container across Docker networks.
+  chain pre {
+    type filter hook prerouting priority -150; policy accept;
+    iifname "docker0" fib daddr type local ct mark set 0x00000f41
+    iifname "br-*" fib daddr type local ct mark set 0x00000f41
+    iifname "docker0" fib daddr oifname "docker0" ct mark set 0x00000f41
+    iifname "docker0" fib daddr oifname "br-*" ct mark set 0x00000f41
+    iifname "br-*" fib daddr oifname "docker0" ct mark set 0x00000f41
+    iifname "br-*" fib daddr oifname "br-*" ct mark set 0x00000f41
+  }
+  # MSS clamping: containers have MTU 1500, the tunnels less (Mullvad 1380,
+  # work 1280), and Mullvad's firewall drops the "packet too big" ICMP to
+  # containers, so large packets would stall. Containers' SYNs get the route
+  # MTU; SYN-ACKs coming back get the tunnel's MSS (MTU - 40).
+  chain clamp {
+    type filter hook forward priority -150; policy accept;
+    oifname "wg0-mullvad" tcp flags syn / syn,rst tcp option maxseg size set rt mtu
+    oifname "work" tcp flags syn / syn,rst tcp option maxseg size set rt mtu
+    iifname "wg0-mullvad" tcp flags syn,ack / syn,ack,rst tcp option maxseg size > 1340 tcp option maxseg size set 1340
+    iifname "work" tcp flags syn,ack / syn,ack,rst tcp option maxseg size > 1240 tcp option maxseg size set 1240
+  }
+}
+NFT
+)
+
+desired_unit=$(cat <<UNIT
+# Installed by chezmoi (run_onchange_after_56-docker-mullvad).
+[Unit]
+Description=Let Docker bridge traffic through Mullvad's firewall
+After=network-pre.target
+Before=docker.service mullvad-daemon.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/nft -f $rules
+ExecStop=/usr/bin/nft delete table inet mullvad-allow-docker
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+)
+
+changed=0
+if [[ "$(cat "$rules" 2>/dev/null)" != "$desired_rules" ]]; then
+  echo "chezmoi: installing $rules (Docker alongside Mullvad)"
+  printf '%s\n' "$desired_rules" | sudo install -m 644 -o root -g root /dev/stdin "$rules"
+  changed=1
+fi
+if [[ "$(cat "$unit" 2>/dev/null)" != "$desired_unit" ]]; then
+  echo "chezmoi: installing $unit"
+  printf '%s\n' "$desired_unit" | sudo install -m 644 -o root -g root /dev/stdin "$unit"
+  sudo systemctl daemon-reload
+  changed=1
+fi
+if [[ $changed == 1 ]] || ! systemctl is-active --quiet mullvad-allow-docker.service; then
+  sudo systemctl enable mullvad-allow-docker.service
+  sudo systemctl restart mullvad-allow-docker.service
+  echo "chezmoi: Docker bridge traffic allowed through Mullvad's firewall"
+fi
+{{ end -}}

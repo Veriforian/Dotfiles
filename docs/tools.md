@@ -99,6 +99,55 @@ so they coexist with no extra rules. You'd lose the app's kill switch, relay pic
 `sudo install -m 600 work.conf /etc/wireguard/work.conf && sudo wg-quick up work` (`down` to stop).
 For it at boot: `sudo systemctl enable --now wg-quick@work`. Don't run both NM and wg-quick for the same tunnel.
 
+## Docker and Mullvad
+
+With the Mullvad app connected (local network sharing off), its firewall drops traffic to private ranges, which
+includes Docker's bridges. Published ports (`-p 127.0.0.1:5432:5432`) refuse connections, and containers have no
+internet.
+
+- **Fix:** `run_onchange_after_56-docker-mullvad` installs `/etc/mullvad-allow-docker.nft`, loaded at boot by
+  `mullvad-allow-docker.service` (sudo once):
+  - **VM ↔ containers** (published ports, container DNS at `172.17.0.1`, container ↔ container across networks) get
+    Mullvad's firewall mark `ct mark 0x00000f41`.
+  - **Container → internet is not marked.** Mullvad already lets it out through the tunnel. A mark would route it
+    *around* the tunnel: Mullvad's prerouting turns `ct mark 0xf41` into its bypass routing mark, and its nat drops
+    marked traffic leaving through the tunnel. The VM side only marks *new* connections, so the "packet too big"
+    ICMP for container flows can't mark them by accident.
+  - **MSS clamping:** containers use MTU 1500, the tunnels less (Mullvad 1380, work 1280), and Mullvad drops the ICMP
+    that would tell containers. SYNs are clamped to the route MTU, and SYN-ACKs to 1340 (Mullvad) / 1240 (work).
+- Not used: `mullvad lan set allow`. It opens every private range, not just Docker.
+- **Check:** `ip route get 1.1.1.1 from 172.17.0.2 iif docker0` → `dev wg0-mullvad` (container traffic in the tunnel);
+  `docker run --rm alpine wget -qO- https://am.i.mullvad.net/connected` → "You are connected to Mullvad";
+  `psql -c 'select 1'`. Rules: `sudo nft list table inet mullvad-allow-docker`.
+
+## PostgreSQL
+
+PostgreSQL 18 in Docker, Omarchy's way (`omarchy-install-docker-dbs` → PostgreSQL): container `postgres18`,
+`127.0.0.1:5432`, trust auth (no password), plus a named volume `postgres18-data` so the data survives re-creating
+the container. Client tools (`psql`, `pg_dump`) come from `postgresql-libs`. `.bashrc` sets `PGHOST=127.0.0.1`,
+since there's no local socket.
+
+- Created and filled from the Mac's Homebrew Postgres by `tools/pg-import.sh` (see [machines](machines.md#moving-the-mac-workspace)).
+  A superuser role named after you means `psql -d <db>` and `postgres://localhost/<db>` work as on the Mac.
+- Compose projects with their own database (e.g. FSM: `postgres:16-alpine` on 5434) bring theirs up with
+  `docker compose up -d`. Their Mac data, if exported, loads with the `psql -p <port> -f …` line `pg-import.sh` prints.
+- Start/stop: `docker start|stop postgres18` (it restarts with Docker). Shell: `docker exec -it postgres18 psql -U postgres`.
+
+## pgAdmin
+
+`~/.local/bin/pgadmin` runs pgAdmin 4 in Docker (`dpage/pgadmin4`, which has an arm64 build; the AUR packages are
+x86-only) and opens it as an Omarchy web app at `http://127.0.0.1:5050`.
+
+- **Desktop mode:** no pgAdmin login and no master password. The data lives in the volume `pgadmin-data`.
+- **Host networking** (`--network host`, listening on 127.0.0.1 only): it reaches `postgres18` and the work VPN's
+  databases like any VM program. With Mullvad on, only the VM's own traffic may use the `work` tunnel, so a normal
+  container network couldn't reach staging.
+- The first start adds **Local (postgres18)** (`127.0.0.1:5432`, your role, no password).
+- **Connections from the Mac:** in the Mac's pgAdmin, *Tools → Import/Export Servers → Export*, save to the share,
+  then `pgadmin import ~/OmWorkspace/<file>.json`. Passwords aren't exported. pgAdmin asks on first connect; tick
+  *Save password*.
+- `pgadmin stop` stops it. It restarts with Docker otherwise.
+
 ## Postman
 
 - Package `postman-bin` (AUR, aarch64 + x86_64).

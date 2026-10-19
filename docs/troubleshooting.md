@@ -4,6 +4,19 @@
 
 Problems hit so far, newest first. Add new ones at the top with symptom → cause → fix.
 
+## Docker: published ports refuse connections, containers have no internet (Mullvad on)
+
+- **Symptom:** `psql -h localhost -p 5432` gets "server closed the connection unexpectedly", even though `docker logs`
+  shows the server ready. `docker run … wget https://…` fails.
+- **Cause:** the Mullvad app is connected with local network sharing off. Its firewall drops traffic to private ranges,
+  and Docker's bridge (`172.17.0.0/16`) is one. `docker-proxy` accepts on `127.0.0.1`, but can't reach the container.
+- **Fix:** `run_onchange_after_56-docker-mullvad` marks VM ↔ container traffic with Mullvad's firewall mark and clamps
+  TCP MSS ([tools](tools.md#docker-and-mullvad)).
+- **Don't mark container → internet traffic.** The first version did, and container requests timed out (2 of 6
+  worked). Mullvad's nat drops marked packets leaving through the tunnel, and its prerouting routes marked packets
+  around the tunnel. Unmarked, Mullvad's forward chain lets them through the tunnel as intended.
+- **Check:** `mullvad lan get` → block (expected). `docker run --rm alpine wget -qO- https://am.i.mullvad.net/connected`.
+
 ## Workspace import: GitLab repos "import forever", none arrive
 
 - **Symptom:** `import-workspace.sh` printed `cloning …` for every repo. Personal (GitHub) repos arrived; the work

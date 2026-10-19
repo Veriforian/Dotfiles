@@ -36,5 +36,10 @@ if [[ -f ~/.ssh/id_ed25519 ]]; then
   [[ $? -eq 1 ]] && ssh-add ~/.ssh/id_ed25519
 fi
 
+# PostgreSQL runs in Docker (container postgres18, 127.0.0.1:5432; docs/tools.md#postgresql),
+# so there's no local socket: point psql/pg_dump/createdb at it over TCP (IPv4:
+# Docker publishes on 127.0.0.1 only, so "localhost" would try ::1 first).
+export PGHOST="${PGHOST:-127.0.0.1}"
+
 # Machine-local secrets and overrides (untracked; see .chezmoiignore)
 [[ -f ~/.bashrc.local ]] && source ~/.bashrc.local

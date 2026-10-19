@@ -1,0 +1,78 @@
+#!/bin/bash
+# pgAdmin 4 in Docker (dpage/pgadmin4 has an arm64 build; the AUR packages are
+# x86-only repackages). Desktop mode: no pgAdmin login, no master password.
+# Host networking on 127.0.0.1:5050, so it reaches postgres18 on
+# 127.0.0.1:5432 and the work VPN's databases like any VM program (with Mullvad
+# on, only the VM's own traffic may use the work tunnel). Data: volume
+# pgadmin-data. Docs: docs/tools.md#pgadmin
+#
+# Usage: pgadmin                       create/start it and open it as a web app
+#        pgadmin import <servers.json> add servers exported from another pgAdmin
+#                                      (Tools > Import/Export Servers > Export)
+#        pgadmin stop
+set -euo pipefail
+
+name=pgadmin
+image=dpage/pgadmin4:latest
+volume=pgadmin-data
+url=http://127.0.0.1:5050
+
+die() { echo "pgadmin: $*" >&2; exit 1; }
+load_servers() { # $1 = JSON file on the VM
+  # Stream it in (written by the container's pgadmin user): docker cp would keep
+  # the file's owner and mode, and pgAdmin can't read a private (600) file.
+  docker exec -i "$name" sh -c 'cat >/tmp/servers.json' <"$1"
+  docker exec "$name" /venv/bin/python3 /pgadmin4/setup.py load-servers /tmp/servers.json
+}
+
+ensure_running() {
+  docker info >/dev/null 2>&1 || die "can't reach Docker"
+  local fresh=0
+  if ! docker container inspect "$name" >/dev/null 2>&1; then
+    echo "pgadmin: creating the $name container ($image)"
+    docker run -d --restart unless-stopped --name "$name" --network host \
+      -e PGADMIN_CONFIG_SERVER_MODE=False \
+      -e PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False \
+      -e PGADMIN_LISTEN_ADDRESS=127.0.0.1 -e PGADMIN_LISTEN_PORT=5050 \
+      -e PGADMIN_DEFAULT_EMAIL=pgadmin@localhost.dev -e PGADMIN_DEFAULT_PASSWORD=unused-in-desktop-mode \
+      -v "$volume:/var/lib/pgadmin" "$image" >/dev/null
+    fresh=1
+  else
+    docker start "$name" >/dev/null
+  fi
+  for _ in $(seq 90); do
+    curl -fs -o /dev/null "$url/misc/ping" && break
+    sleep 1
+  done
+  curl -fs -o /dev/null "$url/misc/ping" || die "pgAdmin didn't start (docker logs $name)"
+  if [ "$fresh" = 1 ]; then
+    # First start: add the local Docker PostgreSQL (trust auth, no password).
+    local tmp
+    tmp=$(mktemp --suffix=.json)
+    cat >"$tmp" <<JSON
+{"Servers": {"1": {"Name": "Local (postgres18)", "Group": "Local", "Host": "127.0.0.1", "Port": 5432,
+  "MaintenanceDB": "postgres", "Username": "$USER", "SSLMode": "prefer"}}}
+JSON
+    load_servers "$tmp" | grep -E "Added|rror" || true
+    rm -f "$tmp"
+  fi
+}
+
+case ${1:-open} in
+  open)
+    ensure_running
+    echo "pgadmin: $url"; [ -n "${PGADMIN_NO_OPEN:-}" ] || omarchy-launch-webapp "$url" >/dev/null 2>&1 &
+    ;;
+  import)
+    [ -f "${2:-}" ] || die "usage: pgadmin import <servers.json>"
+    ensure_running
+    load_servers "$2"
+    echo "pgadmin: imported. Passwords aren't part of the export; pgAdmin asks on first connect (tick 'Save password')."
+    ;;
+  stop)
+    docker stop "$name" >/dev/null && echo "pgadmin: stopped"
+    ;;
+  *)
+    die "usage: pgadmin [open|import <servers.json>|stop]"
+    ;;
+esac
