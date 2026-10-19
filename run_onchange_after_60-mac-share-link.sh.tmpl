@@ -1,0 +1,12 @@
+{{- if and (stat "/usr/bin/omarchy-native-mac-share") (lookPath "systemctl") -}}
+#!/bin/bash
+# Try Omarchy: enable the user service linking ~/Documents/Shared to the Mac share.
+# unit:   {{ include "dot_config/systemd/user/mac-share-documents-link.service" | sha256sum }}
+# script: {{ include "dot_local/bin/executable_mac-share-documents-link" | sha256sum }}
+set -euo pipefail
+
+systemctl --user daemon-reload
+systemctl --user enable mac-share-documents-link.service
+systemctl --user restart mac-share-documents-link.service
+echo "chezmoi: ~/Documents/Shared -> $(readlink ~/Documents/Shared 2>/dev/null || echo 'not linked (see journalctl --user -u mac-share-documents-link)')"
+{{ end -}}

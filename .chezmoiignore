@@ -9,3 +9,13 @@ README.md
 docs
 docs/**
 CLAUDE.md
+
+# Local-only helpers, also git-ignored (see docs/machines.md#moving-the-mac-workspace)
+tools
+tools/**
+
+# Mac share link: only on Try Omarchy, which provides the share
+{{ if not (stat "/usr/bin/omarchy-native-mac-share") }}
+.local/bin/mac-share-documents-link
+.config/systemd/user/mac-share-documents-link.service
+{{ end }}

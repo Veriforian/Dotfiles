@@ -26,7 +26,7 @@ chezmoi git -- add -A && chezmoi git -- commit -m "..." && chezmoi git -- push
 | Doc | Covers |
 |---|---|
 | [Workflow](docs/workflow.md) | Everyday chezmoi flow, command reference, attributes, secrets |
-| [Machines](docs/machines.md) | Machine data (`vm`, `work`, `email`), per-machine differences, bootstrapping |
+| [Machines](docs/machines.md) | Machine data (`vm`, `work`, `email`), per-machine differences, bootstrapping, Mac share, moving the Mac workspace |
 | [Scripts & packages](docs/scripts.md) | `run_onchange_*` scripts and `.chezmoidata/packages.yaml` |
 | [Shell](docs/shell.md) | `.bashrc` customizations, `.bashrc.local` secrets |
 | [Neovim](docs/neovim.md) | LazyVim options, keymaps, commands, plugins |
@@ -46,6 +46,7 @@ run_onchange_*.sh.tmpl      setup scripts (see docs/scripts.md)
 dot_bashrc                  → ~/.bashrc
 dot_config/                 → ~/.config/
 README.md, docs/            repo-only documentation (never deployed)
+tools/                      local-only helpers, git- and chezmoi-ignored (see docs/machines.md)
 ```
 
 ## Keeping docs current

@@ -1,0 +1,35 @@
+#!/bin/bash
+# Link ~/Documents/Shared to the shared Mac folder (Try Omarchy mounts it at
+# /mnt/mac). Run at login by mac-share-documents-link.service.
+# - Share mounted: replace an empty ~/Documents/Shared folder with the link.
+#   A non-empty folder, file or other link is left alone.
+# - No share: remove our link and put an empty folder back, so nothing points
+#   at the empty, root-owned mount point.
+set -euo pipefail
+
+mount_point=${MAC_SHARE_MOUNT_POINT:-/mnt/mac}
+link=${MAC_SHARE_DOCUMENTS_LINK:-$HOME/Documents/Shared}
+log() { echo "mac-share-documents-link: $*" >&2; }
+
+if ! mountpoint -q "$mount_point"; then
+  if [[ -L $link && $(readlink "$link") == "$mount_point" ]]; then
+    rm -f "$link" && mkdir -p "$link"
+    log "no Mac share mounted; replaced $link with an empty folder"
+  fi
+  exit 0
+fi
+
+if [[ -L $link ]]; then
+  [[ $(readlink "$link") == "$mount_point" ]] && exit 0
+  log "$link links elsewhere ($(readlink "$link")); left alone"
+  exit 0
+elif [[ -d $link ]]; then
+  rmdir "$link" 2>/dev/null || { log "$link has content; left alone"; exit 0; }
+elif [[ -e $link ]]; then
+  log "$link exists and isn't a folder; left alone"
+  exit 0
+fi
+
+mkdir -p "$(dirname "$link")"
+ln -s "$mount_point" "$link"
+log "linked $link -> $mount_point"

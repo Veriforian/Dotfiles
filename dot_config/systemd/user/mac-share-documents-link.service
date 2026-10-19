@@ -1,0 +1,14 @@
+# Try Omarchy: also link the shared Mac folder (/mnt/mac, linked as ~/OmWorkspace
+# by omarchy-native-mac-share-link) to ~/Documents/Shared. Runs at login, after
+# Try Omarchy's own link. Docs: docs/machines.md in the dotfiles repo.
+[Unit]
+Description=Link the shared Mac folder to ~/Documents/Shared
+After=omarchy-native-mac-share-link.service
+ConditionPathExists=/usr/bin/omarchy-native-mac-share
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/mac-share-documents-link
+
+[Install]
+WantedBy=default.target
