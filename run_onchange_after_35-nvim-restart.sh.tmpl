@@ -1,0 +1,10 @@
+{{- if lookPath "nvim" -}}
+#!/bin/bash
+# Restarts every running Neovim (tmux panes included) when the nvim config in
+# this repo changes, after 30-nvim-plugins has synced plugins to the lockfile.
+# Instances with unsaved changes are skipped and listed. Docs: docs/neovim.md
+# nvim config hash: {{ output "sh" "-c" "cd \"$1\" && find . -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum" "sh" (joinPath .chezmoi.sourceDir "dot_config/nvim") | trim }}
+set -euo pipefail
+
+"$HOME/.local/bin/nvim-restart-all"
+{{ end -}}

@@ -1,0 +1,33 @@
+#!/bin/bash
+# Restart every running Neovim with `:restart` (Nvim 0.12+): it saves the
+# session, quits, starts with the current config and reopens the same files
+# and splits in the same terminal / tmux pane.
+# Skipped: instances with unsaved changes to file buffers (listed, nothing is lost) and the
+# Neovim this command runs inside ($NVIM). Run by chezmoi after the nvim config
+# changes (run_onchange_after_35-nvim-restart). Docs: docs/neovim.md
+set -uo pipefail
+
+shopt -s nullglob
+sockets=("${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"/nvim.*.0)
+restarted=0 skipped=()
+
+for s in "${sockets[@]}"; do
+  [[ -S $s ]] || continue
+  if [[ -n ${NVIM:-} && $s == "$NVIM" ]]; then
+    skipped+=("$s (the Neovim running this; :restart it yourself)")
+    continue
+  fi
+  # A dead socket (crashed instance) fails here quickly and is ignored.
+  modified=$(timeout 5 nvim --server "$s" --remote-expr \
+    "join(map(filter(getbufinfo({'bufmodified': 1}), {_, b -> index(['', 'acwrite'], getbufvar(b.bufnr, '&buftype')) >= 0}), {_, b -> empty(b.name) ? '[No Name]' : fnamemodify(b.name, ':~:.')}), ', ')" 2>/dev/null) || continue
+  if [[ -n $modified ]]; then
+    skipped+=("$s (unsaved: $modified)")
+    continue
+  fi
+  timeout 5 nvim --server "$s" --remote-send '<C-\><C-n>:restart<CR>' 2>/dev/null && restarted=$((restarted + 1))
+done
+
+echo "nvim-restart-all: restarted $restarted Neovim instance(s)"
+for line in "${skipped[@]}"; do
+  echo "  skipped $line"
+done

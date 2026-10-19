@@ -1,6 +1,6 @@
 # Neovim
 
-[← README](../README.md) · Last updated: 2026-10-16
+[← README](../README.md) · Last updated: 2026-10-19
 
 Source: `dot_config/nvim/` → `~/.config/nvim`. LazyVim base with overrides in `lua/plugins/`.
 Deeper notes live in the config's own [`README.md`](../dot_config/nvim/README.md) and `CLAUDE.md`.
@@ -36,11 +36,26 @@ Deeper notes live in the config's own [`README.md`](../dot_config/nvim/README.md
 | Key | Action | From |
 |---|---|---|
 | `<leader>gg` / `<leader>gG` | lazygit (root / cwd) | LazyVim (requires `lazygit`) |
+| `<leader>ll` | Lazy plugin manager (LazyVim default `<leader>l` moved here; `<leader>l` is now the "lazy" prefix, so `<leader>ld` no longer waits for a timeout) | `keymaps.lua` |
 | `<leader>ld` | Lazydocker float | `lazydocker.lua` |
 | `<leader>ad` / `ar` / `aI` / `ay` | LSP definition / references / implementation / type def (fzf-lua) | `lsp-config.lua` |
 | `<leader>d*` | DAP: `b` breakpoint, `B` conditional, `c` continue, `a` run with args, `C` to cursor, `i`/`o`/`O` step, `r` REPL, `t` terminate | `nvim-dap.lua` |
 | `<leader><space>`, `<leader>/`, `<leader>f*`, `<leader>s*` | fzf-lua pickers (LazyVim layout) | `fzf-lua.lua` |
 | `<leader>gc` / `<leader>gs` | Git commits / status | `fzf-lua.lua` |
+
+## Reloading running Neovims after a config change
+
+`chezmoi apply` restarts every running Neovim (all tmux panes) when anything under `dot_config/nvim/` changed:
+`run_onchange_after_35-nvim-restart` (hash of the whole folder) runs `~/.local/bin/nvim-restart-all` after
+`30-nvim-plugins` has synced plugins.
+
+- Uses Nvim 0.12's `:restart`: it saves the session, quits, starts with the new config and reopens the same files and
+  splits in the same pane. LazyVim configs can't be re-sourced in place, so a restart is the reliable way.
+- **Skipped (listed in the output):** instances with unsaved changes to files (nothing is lost; save and run
+  `nvim-restart-all` again, or `:restart` in that instance), and the Neovim the command runs inside (`$NVIM`, e.g.
+  `chezmoi apply` from a Neovim terminal).
+- Manually, any time: `nvim-restart-all`, or `:restart` in one instance.
+- It finds instances by their sockets, `$XDG_RUNTIME_DIR/nvim.*.0`. Dead sockets from crashed instances are ignored.
 
 ## Commands & autocmds (`lua/config/autocmds.lua`)
 

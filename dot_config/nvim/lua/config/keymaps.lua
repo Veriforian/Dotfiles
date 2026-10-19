@@ -24,6 +24,14 @@ vim.keymap.set("x", "<C-c>", "<Esc>", { noremap = true, silent = true })
 
 vim.keymap.set("n", "<leader>*", "*``")
 
+-- <leader>l is a "lazy" prefix: LazyVim maps it straight to :Lazy, which made
+-- <leader>ld (lazydocker.lua) wait for a timeout. Lazy moves to <leader>ll.
+pcall(vim.keymap.del, "n", "<leader>l")
+vim.keymap.set("n", "<leader>ll", "<cmd>Lazy<cr>", { desc = "Lazy" })
+pcall(function()
+  require("which-key").add({ { "<leader>l", group = "lazy" } })
+end)
+
 -- Place lines without goin i mode
 vim.keymap.set("n", "<leader>o", "o<Esc>k")
 vim.keymap.set("n", "<leader>O", "O<Esc>j")
