@@ -4,6 +4,19 @@
 
 Problems hit so far, newest first. Add new ones at the top with symptom → cause → fix.
 
+## Terminal opacity flips again after an Omarchy update (VM)
+
+- **Symptom:** after an Omarchy update or reinstall on a VM, terminals flip between 0.90 and opaque again on tmux pane
+  switches, even though `hypr/looknfeel.lua` matches terminals by class.
+- **Cause:** Omarchy turns on *Appearance → Window Opacity → Opaque* on VMs (install script `vm-no-animations.sh` and
+  migration `1791705142.sh`). It writes `~/.local/state/omarchy/toggles/hypr/window-opaque.lua`, which loads **after**
+  `looknfeel.lua` and sets the `transparent-window` tag to `1 1`. It's tag-matched, so it only wins every other rule
+  re-evaluation (same Hyprland behaviour as the entry below).
+- **Fix:** `omarchy hyprland window transparency transparent` (Omarchy's default mode). `run_onchange_after_42-window-transparency`
+  does this on apply when the mode is `opaque`. Don't pick *Opaque Windows* or *Glassy Windows* in the menu.
+- **Check:** `omarchy hyprland window transparency` → `transparent`; `hyprctl getprop active opacity` → `0.9`, also after a
+  few `tmux rename-window x` (each changes foot's title).
+
 ## Work WireGuard flaky/broken while the Mullvad app is connected
 
 - **Symptoms:** work IPs time out or are slow; `ip -s link show work` shows TX errors and drops; DNS lookups stall.

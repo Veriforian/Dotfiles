@@ -1,0 +1,23 @@
+{{- if lookPath "omarchy-hyprland-window-transparency" -}}
+#!/bin/bash
+# Omarchy turns on Appearance > Window Opacity > Opaque on every VM install
+# (install/user/hardware/vm-no-animations.sh, migration 1791705142). That toggle
+# loads after hypr/looknfeel.lua and matches the "transparent-window" tag, so it
+# fights our terminal opacity rule and terminals flip between 0.90 and opaque.
+# Switch back to Omarchy's default "transparent" mode, only if it's "opaque".
+set -euo pipefail
+
+mode=$(omarchy-hyprland-window-transparency)
+[[ $mode == "opaque" ]] || exit 0
+
+if [[ -z ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
+  # The command reloads Hyprland; outside a session just drop the toggle file,
+  # which is all "transparent" mode amounts to when glassy isn't on.
+  rm -f "${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/toggles/hypr/window-opaque.lua"
+  echo "chezmoi: removed Omarchy's opaque-windows toggle (applies at next login)"
+  exit 0
+fi
+
+echo "chezmoi: Omarchy window opacity opaque -> transparent (terminal opacity rule)"
+omarchy-hyprland-window-transparency transparent
+{{ end -}}

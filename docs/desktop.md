@@ -38,6 +38,9 @@ do this. They load after Omarchy's rules, and the last matching rule wins:
 - Blur stays off (Omarchy default), so the wallpaper shows through sharp. `decoration.blur.enabled = true` would only
   blur the terminal, since nothing else is translucent.
 - Check live: `hyprctl getprop active opacity`.
+- Needs Omarchy's *Window Opacity* mode on **Transparent** (the default). *Opaque* and *Glassy* are toggle files that load
+  after `looknfeel.lua` and override it. Omarchy turns *Opaque* on for VMs, so `run_onchange_after_42-window-transparency`
+  switches it back (see [scripts](scripts.md), [troubleshooting](troubleshooting.md)).
 
 ### `hypr/input.lua.tmpl`
 
