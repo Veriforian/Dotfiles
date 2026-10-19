@@ -27,6 +27,11 @@ packages:
     - python-pip
     # modify_ script for ~/.config/vesktop/settings/settings.json
     - jq
+    ## Development tools
+    # Work VPN: wg / wg-quick. Tunnels are imported into NetworkManager, which has
+    # WireGuard built in (docs/tools.md#work-vpn-wireguard). Configs hold a private
+    # key: never put them in this repo.
+    - wireguard-tools
   aur:
     # Discord client; Vencord's CustomIdle keeps presence Online (docs/desktop.md).
     # Started minimized by hypr/autostart.lua; settings via modify_settings.json.

@@ -1,0 +1,25 @@
+{{- if stat "/usr/share/pipewire/pipewire.conf.d/90-try-omarchy-quantum.conf" -}}
+# Try Omarchy only (guarded by its 90-try-omarchy-quantum.conf). That file pins
+# the PipeWire quantum to 4096 frames (~85 ms @ 48 kHz) so the emulated Intel
+# HDA card doesn't drop out; this loads after it and halves it to lower audio
+# delay (BT headset via the Mac). Raise back toward 4096 if audio crackles.
+# Try a value live first: pw-metadata -n settings 0 clock.force-quantum 2048
+# Apply: systemctl --user restart pipewire pipewire-pulse wireplumber
+context.properties = {
+    default.clock.quantum     = 2048
+    default.clock.min-quantum = 2048
+    default.clock.max-quantum = 2048
+}
+
+# Same trick as Try Omarchy's file: PipeWire's VM rule runs after
+# context.properties, so a later matching rule has to set min-quantum again.
+context.properties.rules = [
+    {   matches = [ { cpu.vm.name = !null } ]
+        actions = {
+            update-props = {
+                default.clock.min-quantum = 2048
+            }
+        }
+    }
+]
+{{ end -}}

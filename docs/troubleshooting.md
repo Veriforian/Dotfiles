@@ -4,6 +4,28 @@
 
 Problems hit so far, newest first. Add new ones at the top with symptom → cause → fix.
 
+## Work WireGuard flaky/broken while the Mullvad app is connected
+
+- **Symptoms:** work IPs time out or are slow; `ip -s link show work` shows TX errors and drops; DNS lookups stall.
+- **Causes (three):**
+  - Mullvad's firewall drops packets leaving through a non-Mullvad interface.
+  - MTU: `work` was 1420 inside Mullvad's 1380.
+  - DNS: the config's `DNS = 1.1.1.1` made `work` a catch-all DNS route, and Mullvad blocks DNS to non-Mullvad servers.
+- **Fix:** see [tools](tools.md#work-vpn-alongside-mullvad):
+  - an NM dispatcher adds Mullvad's split-tunnel marks for `oifname "work"`;
+  - `wireguard.mtu 1280`;
+  - clear the work connection's DNS.
+- **Routing was already right:** work routes win via Mullvad's `suppress_prefixlength 0` rule, and the work endpoint goes
+  through Mullvad.
+
+## VM: audio delay on the Bluetooth headset
+
+- **Cause:** mostly unavoidable. Bluetooth on the Mac adds ~150–250 ms, and the headset is connected to the Mac, not the
+  VM. On top of that, Try Omarchy pins PipeWire's quantum at 4096 frames (~85 ms per cycle) to avoid dropouts from the
+  emulated HDA card.
+- **Fix:** `99-vm-audio-latency.conf` halves the quantum to 2048 (~43 ms). See [desktop](desktop.md#audio-latency-try-omarchy-vm).
+  If audio starts crackling or dropping, raise it again.
+
 ## AUR install: `PGP keys need importing … keyserver receive failed: No route to host`
 
 - **Seen:** installing `mullvad-vpn-bin` with yay on the Try Omarchy VM (2026-10-19). The workaround that day was

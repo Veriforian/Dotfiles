@@ -84,6 +84,26 @@ set mode, scale and position, and save profiles.
   *Displays have separate Spaces* and stretch the VM window across both screens, giving one wide `Virtual-1`.
   Real dual-monitor use is for the Omarchy desktop.
 
+## Audio latency (Try Omarchy VM)
+
+The VM has no Bluetooth. Audio goes guest PipeWire → emulated Intel HDA → QEMU → macOS → Bluetooth headset. Try Omarchy
+routes to each Mac device through `omarchy_host_output_*` loopback sinks (e.g. "MOMENTUM 4").
+
+| Stage | Delay | Ours to change? |
+|---|---|---|
+| Guest PipeWire quantum | Try Omarchy pins **4096 frames ≈ 85 ms** (`/usr/share/pipewire/pipewire.conf.d/90-try-omarchy-quantum.conf`), 1–2 quanta in flight | Yes |
+| QEMU → macOS | Small (host: 1 ms timer, 8 buffers) | No (host app) |
+| macOS → BT headset (A2DP/AAC) | ~150–250 ms, typical for BT | No |
+
+- **Override:** `~/.config/pipewire/pipewire.conf.d/99-vm-audio-latency.conf` (template) pins it to **2048 ≈ 43 ms**.
+  - It only renders where Try Omarchy's `90-…` file exists. OmacVM and the desktop get nothing.
+  - Trade-off: Try Omarchy raised the quantum because the emulated HDA reports its position in coarse jumps, and
+    smaller quanta can cause dropouts (xruns). If audio crackles, raise the value; 3072 is a middle ground.
+- **Try a value live first** (nothing written; resets on restart or with `0`):
+  `pw-metadata -n settings 0 clock.force-quantum 2048`, then `… 0` to undo.
+- **Apply:** `chezmoi apply`, then `systemctl --user restart pipewire pipewire-pulse wireplumber`.
+- **Check:** `pw-metadata -n settings 0 | grep quantum` → `2048`. `pw-top` shows the quantum in use and any errors (ERR column).
+
 ## Discord presence (Vesktop + CustomIdle)
 
 Goal: stay "Online" in Discord while away from the keyboard. It replaces [keep-presence](https://github.com/carrot69/keep-presence),

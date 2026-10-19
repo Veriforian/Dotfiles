@@ -1,0 +1,63 @@
+{{- if and (lookPath "mullvad") (lookPath "nmcli") (lookPath "nft") -}}
+#!/bin/bash
+# Work WireGuard ("work" NetworkManager connection) alongside the Mullvad app:
+# all traffic through Mullvad, work IPs through the work tunnel, and the work
+# tunnel's own encrypted packets carried inside Mullvad.
+#
+# Routing already does that (Mullvad's `lookup main suppress_prefixlength 0`
+# rule lets the work routes win). What breaks it is Mullvad's firewall, which
+# drops anything leaving through an interface other than its own. This
+# installs a NetworkManager dispatcher script that, while "work" is up, marks
+# packets leaving through it with Mullvad's documented split-tunnel marks
+# (https://mullvad.net/en/help/split-tunneling-with-linux-advanced), so they
+# pass the firewall. Re-runs when this script changes; sudo only if the
+# installed file differs. Docs: docs/tools.md#work-vpn-alongside-mullvad
+set -euo pipefail
+
+dest=/etc/NetworkManager/dispatcher.d/50-mullvad-allow-work
+desired=$(cat <<'DISPATCHER'
+#!/bin/bash
+# Installed by chezmoi (run_onchange_after_55-work-vpn-mullvad). NetworkManager
+# dispatcher: $1 = interface, $2 = action.
+# While the "work" WireGuard interface is up, packets leaving through it get
+# Mullvad's split-tunnel marks so Mullvad's firewall accepts them:
+#   ct mark 0x00000f41   = allowed by Mullvad's firewall (replies too, via conntrack)
+#   meta mark 0x6d6f6c65 = skip Mullvad's routing table -> main table -> dev work
+# Only packets ALREADY routed to "work" are touched; everything else stays in
+# Mullvad, including the work tunnel's own UDP to its endpoint.
+iface=work
+table=mullvad-allow-work
+
+[[ $1 == "$iface" ]] || exit 0
+
+case $2 in
+  up)
+    /usr/bin/nft -f - <<NFT
+table inet $table
+delete table inet $table
+table inet $table {
+  chain out {
+    type route hook output priority 0; policy accept;
+    oifname "$iface" ct mark set 0x00000f41 meta mark set 0x6d6f6c65
+  }
+}
+NFT
+    ;;
+  down)
+    /usr/bin/nft delete table inet "$table" 2>/dev/null || true
+    ;;
+esac
+exit 0
+DISPATCHER
+)
+
+if [[ "$(cat "$dest" 2>/dev/null)" != "$desired" ]]; then
+  echo "chezmoi: installing $dest (work VPN alongside Mullvad)"
+  printf '%s\n' "$desired" | sudo install -m 755 -o root -g root /dev/stdin "$dest"
+fi
+
+# Load it now if the work tunnel is already up (otherwise it loads on next up).
+if ip link show work &>/dev/null; then
+  sudo "$dest" work up
+fi
+{{ end -}}

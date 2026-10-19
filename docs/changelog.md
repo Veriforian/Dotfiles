@@ -6,6 +6,9 @@ Config changes, newest first. One line per change; link to the doc that describe
 
 ## 2026-10-19
 
+- Work VPN + Mullvad together: NM dispatcher adds Mullvad's split-tunnel marks for `work`; work MTU 1280 and no work DNS. [tools](tools.md#work-vpn-alongside-mullvad)
+- Work VPN: `wireguard-tools` (pacman, Development tools). Configs are imported into NetworkManager, never into the repo. [tools](tools.md#work-vpn-wireguard)
+- Try Omarchy audio: PipeWire quantum 4096 → 2048 (~85 → ~43 ms per cycle) to cut BT headset delay. [desktop](desktop.md#audio-latency-try-omarchy-vm)
 - Postman (`postman-bin`, AUR) installed. [tools](tools.md#postman)
 - Mullvad VPN (`mullvad-vpn-bin`, AUR) is a default package. [tools](tools.md#mullvad-vpn)
 - VMs: `~/.gnupg/dirmngr.conf` `disable-ipv6`; fixes AUR PGP key imports failing over the VM's dead IPv6. [troubleshooting](troubleshooting.md)

@@ -22,6 +22,7 @@ To make a script react to another file, embed that file's hash in a comment:
 | `run_onchange_after_20-mise-install.sh.tmpl` | `mise` exists | `~/.config/mise/config.toml` changes | `mise install` |
 | `run_onchange_after_30-nvim-plugins.sh.tmpl` | `nvim` exists | `lazy-lock.json` changes | `nvim --headless "+Lazy! restore"` (10 min timeout) |
 | `run_onchange_after_45-omarchy-themed.sh.tmpl` | `omarchy-theme-set` exists | `themed/foot.ini.tpl` or the `theme-set` hook changes (hashes) | `omarchy theme set <current theme>` to re-render generated configs. On a fresh machine this repeats `40`'s theme set (harmless). See [desktop](desktop.md#terminal-background-darker-than-the-theme) |
+| `run_onchange_after_55-work-vpn-mullvad.sh.tmpl` | `mullvad`, `nmcli`, `nft` exist | Script edited | Installs the NM dispatcher `/etc/NetworkManager/dispatcher.d/50-mullvad-allow-work` (sudo, only if different) and loads it if `work` is up (see [tools](tools.md#work-vpn-alongside-mullvad)) |
 | `run_onchange_after_50-ssh-agent.sh.tmpl` | `systemctl` + OpenSSH's `ssh-agent.socket` unit exist | Script edited | `systemctl --user enable --now ssh-agent.socket` if not enabled. User unit, no sudo (see [tools](tools.md#ssh-agent-git-lazygit)) |
 | `run_onchange_after_40-omarchy-theme.sh.tmpl` | `omarchy-theme-set` exists | Script edited (e.g. `theme=`) | `omarchy theme set one-dark-pro` unless already current. Outside a Hyprland session it prints a reminder and skips. The theme is cloned by `.chezmoiexternal.toml.tmpl`, and externals are written before `after_` scripts run |
 
@@ -37,6 +38,7 @@ To make a script react to another file, embed that file's hash in a comment:
 | `git-delta` | fzf-lua code-action previewer |
 | `stylua` | `stylua.toml` in the nvim config |
 | `imagemagick`, `python-pip` | snacks.image rendering |
+| `wireguard-tools` | *Development tools:* work VPN (`wg`, `wg-quick`). See [tools](tools.md#work-vpn-wireguard) |
 | `jq` | `modify_` script for Vesktop's `settings.json` (see [desktop](desktop.md#discord-presence-vesktop--customidle)) |
 
 **AUR** (`packages.aur`, installed with `omarchy-pkg-aur-add` → yay):
@@ -44,6 +46,7 @@ To make a script react to another file, embed that file's hash in a comment:
 | Package | Why |
 |---|---|
 | `hyprmon-bin` | Monitor layout TUI with Lua config support (see [desktop](desktop.md#monitors)). Not `hyprmon`, which is a different, x86_64-only tool |
+| `postman-bin` | *Development tools:* API client (see [tools](tools.md#postman)) |
 | `mullvad-vpn-bin` | Mullvad VPN app + daemon (see [tools](tools.md#mullvad-vpn)) |
 | `vesktop-bin` | Discord client (aarch64 build available). CustomIdle keeps presence Online (see [desktop](desktop.md#discord-presence-vesktop--customidle)) |
 
