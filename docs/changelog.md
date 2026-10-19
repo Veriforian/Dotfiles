@@ -6,6 +6,7 @@ Config changes, newest first. One line per change; link to the doc that describe
 
 ## 2026-10-19
 
+- Postman (`postman-bin`, AUR) installed. [tools](tools.md#postman)
 - Mullvad VPN (`mullvad-vpn-bin`, AUR) is a default package. [tools](tools.md#mullvad-vpn)
 - VMs: `~/.gnupg/dirmngr.conf` `disable-ipv6`; fixes AUR PGP key imports failing over the VM's dead IPv6. [troubleshooting](troubleshooting.md)
 - Scripts doc: checklist for adding an app. [scripts](scripts.md#adding-an-app-checklist)

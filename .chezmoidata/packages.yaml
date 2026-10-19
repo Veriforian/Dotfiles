@@ -37,3 +37,5 @@ packages:
     # Mullvad VPN app + daemon (pulls mullvad-vpn-daemon-bin; its install script
     # enables mullvad-daemon). Account login is manual, never in this repo.
     - mullvad-vpn-bin
+    ## Development tools
+    - postman-bin
