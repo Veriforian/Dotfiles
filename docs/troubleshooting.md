@@ -4,6 +4,15 @@
 
 Problems hit so far, newest first. Add new ones at the top with symptom → cause → fix.
 
+## tmux: restored windows have the wrong size on another monitor
+
+- **Symptom:** after continuum restores sessions (or switching to a PC with a different monitor), old windows and panes
+  have the previous screen's size and layout; only new windows fit.
+- **Cause:** `aggressive-resize on` resizes a window only while a screen shows it. Restored windows keep the size they
+  were saved at until something resizes them.
+- **Fix:** `~/.config/tmux/fit-windows.sh` fits every window in the session on attach, session switch, terminal resize
+  and after a restore; `prefix F` runs it by hand ([tools](tools.md#tmux-configtmuxtmuxconf)).
+
 ## Service can't reach Postgres/Redis on `localhost`, only on `0.0.0.0`
 
 - **Symptom:** a Node service with host `localhost` gets `ECONNREFUSED ::1:5432`; host `0.0.0.0` or `127.0.0.1` works.

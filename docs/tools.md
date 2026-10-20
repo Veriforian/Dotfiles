@@ -275,6 +275,13 @@ force sooner with `chezmoi apply --refresh-externals`.
 dict in `.chezmoiexternal.toml.tmpl`, then `chezmoi apply` and `prefix q` to reload.
 **Going back to the Omarchy theme:** remove the themepack `@plugin` + `@themepack` lines and its externals entry.
 
+**Window sizes across monitors (`~/.config/tmux/fit-windows.sh`):** with `aggressive-resize`, tmux only resizes a
+window when a screen shows it. Windows restored by continuum, or last used on another monitor, keep the old size and
+pane proportions until visited. `fit-windows.sh` sizes every window of the client's session to the current screen
+(panes scale proportionally), then unsets each window's `window-size`, so tmux's normal sizing (`latest`) takes over
+again. It runs from hooks on `client-attached`, `client-session-changed` and `client-resized` (index `[90]`), from
+`@resurrect-hook-post-restore-all`, and on `prefix F` ("Fit all windows to this screen").
+
 ## starship (`~/.config/starship.toml`)
 
 Stock Omarchy. Tracked for future changes.
