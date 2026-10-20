@@ -1,0 +1,23 @@
+{{- if lookPath "docker" -}}
+#!/bin/bash
+# Local dev services in Docker, on every Omarchy machine with Docker:
+#   - docker.service enabled at boot (Omarchy only socket-activates it), so
+#     containers with --restart unless-stopped are up after a reboot
+#   - postgres18: PostgreSQL 18 on 127.0.0.1:5432 (~/.local/bin/pg-local)
+#   - pgadmin: pgAdmin 4 on 127.0.0.1:5050 (~/.local/bin/pgadmin; app launcher entry)
+# Both helpers use sudo for Docker when you aren't in the docker group (Omarchy
+# default; sudoless Docker is opt-in, see run_onchange_after_65). First run pulls
+# the images (~600 MB). Re-runs when either helper changes.
+# pg-local: {{ include "dot_local/bin/executable_pg-local" | sha256sum }}
+# pgadmin:  {{ include "dot_local/bin/executable_pgadmin" | sha256sum }}
+# Docs: docs/tools.md#postgresql, docs/tools.md#pgadmin
+set -euo pipefail
+
+if ! systemctl is-enabled --quiet docker.service; then
+  echo "chezmoi: enabling docker.service at boot (dev containers restart with it)"
+  sudo systemctl enable --now docker.service
+fi
+
+"$HOME/.local/bin/pg-local" ensure
+"$HOME/.local/bin/pgadmin" ensure
+{{ end -}}

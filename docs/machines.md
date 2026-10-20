@@ -35,9 +35,19 @@ Inspect them with `chezmoi data`. Re-run the prompts with `chezmoi init`. Answer
 
 1. Install Omarchy (or start Try Omarchy).
 2. `chezmoi init --apply git@github.com:Veriforian/Dotfiles.git` and answer the prompts.
-   Scripts run in order: VM network (VM only) → packages (asks for sudo) → files → mise → nvim plugins.
+   Scripts run in order: VM network (VM only) → packages (asks for sudo) → files → mise → nvim plugins / restart →
+   theme → opacity → ssh-agent → work VPN + Mullvad → Docker + Mullvad → Mac share (Try Omarchy) → sudoless Docker
+   (work) → dev services (Docker at boot, postgres18, pgAdmin). Run it from a terminal: several steps ask for sudo.
 3. Create `~/.bashrc.local` with secrets (see [shell](shell.md#secrets-bashrclocal)).
 4. Open a new terminal. Check with `chezmoi status` (should be empty) and `chezmoi doctor`.
+5. Work machines: reboot once, so sudoless Docker (`run_onchange_after_65`) takes effect.
+
+What `chezmoi apply` sets up on any Omarchy machine, besides the config files: packages (pacman + AUR), mise tools
+(Node with `.nvmrc` support, Go, Rust, gh, claude, codex), Neovim plugins, the One Dark Pro theme, ssh-agent, the work
+VPN + Mullvad dispatcher, Docker + Mullvad rules, and local dev services (PostgreSQL 18 + pgAdmin in Docker, with a
+launcher entry). Machine-specific: sudoless Docker (`work`), the Mac share link (Try Omarchy), DNS over TLS (VMs).
+Not covered: SSH keys, `~/.bashrc.local`, work WireGuard configs, saved passwords, and data (databases, the
+workspace). See [Moving the Mac workspace](#moving-the-mac-workspace).
 
 ## Other VMs (OmacVM, UTM)
 

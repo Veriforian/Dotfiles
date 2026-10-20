@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Name=pgAdmin
+Comment=PostgreSQL admin (pgAdmin 4 in Docker, desktop mode)
+Exec={{ .chezmoi.homeDir }}/.local/bin/pgadmin
+Terminal=false
+Type=Application
+Icon={{ .chezmoi.homeDir }}/.local/share/icons/hicolor/256x256/apps/pgadmin.png
+Categories=Development;Database;
+StartupNotify=true

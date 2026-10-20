@@ -34,6 +34,13 @@ packages:
     - wireguard-tools
     # Copying the Mac workspace in (docs/machines.md) and general file syncing
     - rsync
+    # Local dev services (docs/tools.md#postgresql): Omarchy ships these, listed
+    # so the dev setup doesn't silently depend on its defaults. Postgres itself
+    # runs in Docker (pg-local); postgresql-libs is the psql/pg_dump client.
+    - docker
+    - docker-compose
+    - docker-buildx
+    - postgresql-libs
   aur:
     # Discord client; Vencord's CustomIdle keeps presence Online (docs/desktop.md).
     # Started minimized by hypr/autostart.lua; settings via modify_settings.json.

@@ -122,31 +122,39 @@ internet.
 
 ## PostgreSQL
 
-PostgreSQL 18 in Docker, Omarchy's way (`omarchy-install-docker-dbs` → PostgreSQL): container `postgres18`,
-`127.0.0.1:5432`, trust auth (no password), plus a named volume `postgres18-data` so the data survives re-creating
-the container. Client tools (`psql`, `pg_dump`) come from `postgresql-libs`. `.bashrc` sets `PGHOST=127.0.0.1`,
-since there's no local socket.
+PostgreSQL 18 in Docker, Omarchy's way (`omarchy-install-docker-dbs` → PostgreSQL), managed by
+`~/.local/bin/pg-local`: container `postgres18`, `127.0.0.1:5432`, trust auth (no password), named volume
+`postgres18-data` so the data survives re-creating the container. Client tools (`psql`, `pg_dump`) come from
+`postgresql-libs`. `.bashrc` sets `PGHOST=127.0.0.1`, since there's no local socket.
 
-- Created and filled from the Mac's Homebrew Postgres by `tools/pg-import.sh` (see [machines](machines.md#moving-the-mac-workspace)).
-  A superuser role named after you means `psql -d <db>` and `postgres://localhost/<db>` work as on the Mac.
+- **Every Omarchy machine with Docker gets it on `chezmoi apply`** (`run_onchange_after_70-dev-services`):
+  `docker.service` is enabled at boot (Omarchy only socket-activates Docker, so restart-policy containers would stay
+  down until something touched Docker), then `pg-local ensure` and `pgadmin ensure`.
+- `pg-local ensure` creates or starts the container, waits for a real TCP connection, and adds a superuser role named
+  after you. So `psql -d <db>` and `postgres://localhost/<db>` work without a password, as with Homebrew.
+- Without sudoless Docker (Omarchy's default on non-work machines), the helpers use `sudo docker` in a terminal and a
+  polkit prompt from the app launcher.
+- Data from the Mac's Homebrew Postgres: `tools/pg-import.sh` (see [machines](machines.md#moving-the-mac-workspace)).
 - Compose projects with their own database (e.g. FSM: `postgres:16-alpine` on 5434) bring theirs up with
-  `docker compose up -d`. Their Mac data, if exported, loads with the `psql -p <port> -f …` line `pg-import.sh` prints.
-- Start/stop: `docker start|stop postgres18` (it restarts with Docker). Shell: `docker exec -it postgres18 psql -U postgres`.
+  `docker compose up -d`.
+- `pg-local stop` stops it. Shell as the postgres superuser: `docker exec -it postgres18 psql -U postgres`.
 
 ## pgAdmin
 
 `~/.local/bin/pgadmin` runs pgAdmin 4 in Docker (`dpage/pgadmin4`, which has an arm64 build; the AUR packages are
 x86-only) and opens it as an Omarchy web app at `http://127.0.0.1:5050`.
 
+- **App launcher:** "pgAdmin" (`~/.local/share/applications/pgAdmin.desktop`, icon from pgAdmin's own logo). It runs
+  `pgadmin`, which starts the container if needed and opens the web app.
+- Created on `chezmoi apply` with the other dev services (see [PostgreSQL](#postgresql)).
 - **Desktop mode:** no pgAdmin login and no master password. The data lives in the volume `pgadmin-data`.
 - **Host networking** (`--network host`, listening on 127.0.0.1 only): it reaches `postgres18` and the work VPN's
   databases like any VM program. With Mullvad on, only the VM's own traffic may use the `work` tunnel, so a normal
   container network couldn't reach staging.
 - The first start adds **Local (postgres18)** (`127.0.0.1:5432`, your role, no password).
-- **Connections from the Mac:** in the Mac's pgAdmin, *Tools → Import/Export Servers → Export*, save to the share,
-  then `pgadmin import ~/OmWorkspace/<file>.json`. Passwords aren't exported. pgAdmin asks on first connect; tick
-  *Save password*.
-- `pgadmin stop` stops it. It restarts with Docker otherwise.
+- **Connections from another pgAdmin:** *Tools → Import/Export Servers → Export*, then `pgadmin import <file>.json`.
+  Passwords aren't exported. pgAdmin asks on first connect; tick *Save password*.
+- `pgadmin ensure` (start without opening), `pgadmin stop`.
 
 ## Postman
 

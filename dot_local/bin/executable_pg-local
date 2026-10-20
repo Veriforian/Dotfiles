@@ -1,0 +1,60 @@
+#!/bin/bash
+# Local PostgreSQL 18 in Docker, Omarchy's way (omarchy-install-docker-dbs:
+# container postgres18, 127.0.0.1:5432, trust auth) plus a named volume, so the
+# data survives re-creating the container. Restarts with Docker
+# (docker.service is enabled at boot by run_onchange_after_70-dev-services).
+# Docs: docs/tools.md#postgresql
+#
+# Usage: pg-local [ensure]   create/start it, wait until it accepts connections,
+#                            and make sure a superuser role named $USER exists
+#        pg-local stop
+# Env:   PG_CONTAINER=postgres18 PG_IMAGE=postgres:18 PG_VOLUME=postgres18-data PG_PORT=5432
+set -euo pipefail
+
+name=${PG_CONTAINER:-postgres18}
+image=${PG_IMAGE:-postgres:18}
+volume=${PG_VOLUME:-postgres18-data}
+port=${PG_PORT:-5432}
+
+die() { echo "pg-local: $*" >&2; exit 1; }
+# Omarchy keeps users out of the root-equivalent docker group unless they opt
+# in, so elevate when needed: sudo in a terminal, a polkit prompt otherwise.
+needs_sudo() {
+  if command -v omarchy-sudo-docker >/dev/null; then omarchy-sudo-docker; else [ ! -w /var/run/docker.sock ]; fi
+}
+dock() {
+  if ! needs_sudo; then docker "$@"
+  elif [ -t 0 ]; then sudo docker "$@"
+  else pkexec docker "$@"; fi
+}
+sql() { psql -X -h 127.0.0.1 -p "$port" -U postgres -d postgres -qAt "$@"; }
+
+case ${1:-ensure} in
+  ensure)
+    if dock container inspect "$name" >/dev/null 2>&1; then
+      dock start "$name" >/dev/null
+    else
+      echo "pg-local: creating $name ($image, 127.0.0.1:$port, volume $volume)"
+      dock run -d --restart unless-stopped -p "127.0.0.1:$port:5432" --name "$name" \
+        -e POSTGRES_HOST_AUTH_METHOD=trust -v "$volume:/var/lib/postgresql" "$image" >/dev/null
+    fi
+    # Wait for a real TCP connection: on first start the image runs a temporary
+    # socket-only server for initdb that pg_isready would already call ready.
+    for _ in $(seq 90); do
+      sql -c 'select 1' >/dev/null 2>&1 && break
+      sleep 1
+    done
+    sql -c 'select 1' >/dev/null 2>&1 || die "$name didn't accept connections on 127.0.0.1:$port (docker logs $name)"
+    if [ -z "$(sql -c "select 1 from pg_roles where rolname = '$USER'")" ]; then
+      sql -c "create role \"$USER\" superuser login" >/dev/null
+      echo "pg-local: created superuser role $USER (psql connects as you, no password)"
+    fi
+    echo "pg-local: $name ready on 127.0.0.1:$port"
+    ;;
+  stop)
+    dock stop "$name" >/dev/null && echo "pg-local: stopped $name"
+    ;;
+  *)
+    die "usage: pg-local [ensure|stop]"
+    ;;
+esac

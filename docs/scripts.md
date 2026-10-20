@@ -27,6 +27,7 @@ To make a script react to another file, embed that file's hash in a comment:
 | `run_onchange_after_56-docker-mullvad.sh.tmpl` | `mullvad`, `nft`, `docker` exist | Script edited | Installs `/etc/mullvad-allow-docker.nft` + `mullvad-allow-docker.service` (sudo, only if different) so Docker bridge traffic passes Mullvad's firewall (see [tools](tools.md#docker-and-mullvad)) |
 | `run_onchange_after_60-mac-share-link.sh.tmpl` | `/usr/bin/omarchy-native-mac-share` exists (Try Omarchy) | The unit or `mac-share-documents-link` changes (hashes) | `systemctl --user enable` + restart `mac-share-documents-link.service`: `~/Documents/Shared` → `/mnt/mac`. No sudo (see [machines](machines.md#mac-share-try-omarchy)) |
 | `run_onchange_after_65-sudoless-docker.sh.tmpl` | `.work` and `omarchy-setup-security-sudoless-docker` exists | Script edited | If you're not in the `docker` group, runs Omarchy's sudoless-Docker opt-in (warning + yes/no + sudo; reboot after). See [tools](tools.md#docker) |
+| `run_onchange_after_70-dev-services.sh.tmpl` | `docker` exists | `pg-local` or `pgadmin` changes (hashes) | Enables `docker.service` at boot (sudo, once), then `pg-local ensure` (postgres18) and `pgadmin ensure`. First run pulls ~600 MB of images (see [tools](tools.md#postgresql)) |
 | `run_onchange_after_55-work-vpn-mullvad.sh.tmpl` | `mullvad`, `nmcli`, `nft` exist | Script edited | Installs the NM dispatcher `/etc/NetworkManager/dispatcher.d/50-mullvad-allow-work` (sudo, only if different) and loads it if `work` is up (see [tools](tools.md#work-vpn-alongside-mullvad)) |
 | `run_onchange_after_50-ssh-agent.sh.tmpl` | `systemctl` + OpenSSH's `ssh-agent.socket` unit exist | Script edited | `systemctl --user enable --now ssh-agent.socket` if not enabled. User unit, no sudo (see [tools](tools.md#ssh-agent-git-lazygit)) |
 | `run_onchange_after_40-omarchy-theme.sh.tmpl` | `omarchy-theme-set` exists | Script edited (e.g. `theme=`) | `omarchy theme set one-dark-pro` unless already current. Outside a Hyprland session it prints a reminder and skips. The theme is cloned by `.chezmoiexternal.toml.tmpl`, and externals are written before `after_` scripts run |
@@ -43,6 +44,7 @@ To make a script react to another file, embed that file's hash in a comment:
 | `git-delta` | fzf-lua code-action previewer |
 | `stylua` | `stylua.toml` in the nvim config |
 | `imagemagick`, `python-pip` | snacks.image rendering |
+| `docker`, `docker-compose`, `docker-buildx`, `postgresql-libs` | *Development tools:* local dev services (PostgreSQL in Docker, pgAdmin) and the `psql` / `pg_dump` client. Omarchy ships them too; listed so the setup doesn't depend on that (see [tools](tools.md#postgresql)) |
 | `rsync` | *Development tools:* copying files in from the Mac share (see [machines](machines.md#moving-the-mac-workspace)) |
 | `wireguard-tools` | *Development tools:* work VPN (`wg`, `wg-quick`). See [tools](tools.md#work-vpn-wireguard) |
 | `jq` | `modify_` script for Vesktop's `settings.json` (see [desktop](desktop.md#discord-presence-vesktop--customidle)) |

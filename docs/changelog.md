@@ -6,6 +6,7 @@ Config changes, newest first. One line per change; link to the doc that describe
 
 ## 2026-10-19
 
+- Dev services on every Omarchy machine: `run_onchange_after_70-dev-services` (docker.service at boot, `pg-local` → postgres18, `pgadmin`); pgAdmin app-launcher entry + icon; docker/postgresql-libs in packages. [tools](tools.md#postgresql), [machines](machines.md#bootstrapping-a-new-machine)
 - Postgres: 22 Homebrew databases (PG 14) restored into `postgres18`. `pgadmin` launcher (Docker, desktop mode, host network, `pgadmin import`). Docker + Mullvad rules revised: container internet left unmarked, MSS clamping. [tools](tools.md#pgadmin)
 - Docker + Mullvad: bridge traffic gets Mullvad's firewall mark (`run_onchange_after_56`); PostgreSQL 18 in Docker; `tools/pg-export.sh` / `pg-import.sh` move Homebrew databases; `.bashrc` `PGHOST=127.0.0.1`. [tools](tools.md#postgresql)
 - nvim: `chezmoi apply` restarts running Neovims (`:restart`, session kept) when the nvim config changes; `nvim-restart-all` command. [neovim](neovim.md#reloading-running-neovims-after-a-config-change)
