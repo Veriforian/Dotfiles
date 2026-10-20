@@ -1,7 +1,7 @@
 #!/bin/bash
 # Local PostgreSQL 18 in Docker, Omarchy's way (omarchy-install-docker-dbs:
-# container postgres18, 127.0.0.1:5432, trust auth) plus a named volume, so the
-# data survives re-creating the container. Restarts with Docker
+# container postgres18, 127.0.0.1:5432, trust auth) plus [::1]:5432 and a named
+# volume, so the data survives re-creating the container. Restarts with Docker
 # (docker.service is enabled at boot by run_onchange_after_70-dev-services).
 # Docs: docs/tools.md#postgresql
 #
@@ -31,11 +31,20 @@ sql() { psql -X -h 127.0.0.1 -p "$port" -U postgres -d postgres -qAt "$@"; }
 
 case ${1:-ensure} in
   ensure)
+    # Publish on 127.0.0.1 AND ::1: "localhost" resolves to ::1 first (Node
+    # connects there), and Docker only listens where it's told. Containers from
+    # before this lack ::1 and are re-created; the data is in the volume.
+    if dock container inspect "$name" >/dev/null 2>&1 &&
+      ! dock inspect -f '{{json .HostConfig.PortBindings}}' "$name" | grep -q '"HostIp":"::1"'; then
+      echo "pg-local: re-creating $name to also listen on [::1]:$port (data stays in $volume)"
+      dock stop "$name" >/dev/null  # clean shutdown (Redis saves to disk)
+      dock rm "$name" >/dev/null
+    fi
     if dock container inspect "$name" >/dev/null 2>&1; then
       dock start "$name" >/dev/null
     else
-      echo "pg-local: creating $name ($image, 127.0.0.1:$port, volume $volume)"
-      dock run -d --restart unless-stopped -p "127.0.0.1:$port:5432" --name "$name" \
+      echo "pg-local: creating $name ($image, localhost:$port, volume $volume)"
+      dock run -d --restart unless-stopped -p "127.0.0.1:$port:5432" -p "[::1]:$port:5432" --name "$name" \
         -e POSTGRES_HOST_AUTH_METHOD=trust -v "$volume:/var/lib/postgresql" "$image" >/dev/null
     fi
     # Wait for a real TCP connection: on first start the image runs a temporary

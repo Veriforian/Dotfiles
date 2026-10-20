@@ -5,12 +5,14 @@
 #     containers with --restart unless-stopped are up after a reboot
 #   - postgres18: PostgreSQL 18 on 127.0.0.1:5432 (~/.local/bin/pg-local)
 #   - pgadmin: pgAdmin 4 on 127.0.0.1:5050 (~/.local/bin/pgadmin; app launcher entry)
-# Both helpers use sudo for Docker when you aren't in the docker group (Omarchy
+#   - redis: Redis 7 on 127.0.0.1:6379 (~/.local/bin/redis-local)
+# The helpers use sudo for Docker when you aren't in the docker group (Omarchy
 # default; sudoless Docker is opt-in, see run_onchange_after_65). First run pulls
-# the images (~600 MB). Re-runs when either helper changes.
+# the images (~650 MB). Re-runs when a helper changes.
 # pg-local: {{ include "dot_local/bin/executable_pg-local" | sha256sum }}
 # pgadmin:  {{ include "dot_local/bin/executable_pgadmin" | sha256sum }}
-# Docs: docs/tools.md#postgresql, docs/tools.md#pgadmin
+# redis:    {{ include "dot_local/bin/executable_redis-local" | sha256sum }}
+# Docs: docs/tools.md#postgresql, docs/tools.md#pgadmin, docs/tools.md#redis
 set -euo pipefail
 
 if ! systemctl is-enabled --quiet docker.service; then
@@ -20,4 +22,5 @@ fi
 
 "$HOME/.local/bin/pg-local" ensure
 "$HOME/.local/bin/pgadmin" ensure
+"$HOME/.local/bin/redis-local" ensure
 {{ end -}}

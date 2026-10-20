@@ -37,10 +37,13 @@ packages:
     # Local dev services (docs/tools.md#postgresql): Omarchy ships these, listed
     # so the dev setup doesn't silently depend on its defaults. Postgres itself
     # runs in Docker (pg-local); postgresql-libs is the psql/pg_dump client.
+    # Redis runs in Docker (redis-local); valkey (Arch's Redis fork) is for
+    # redis-cli / valkey-cli only, its own server stays disabled.
     - docker
     - docker-compose
     - docker-buildx
     - postgresql-libs
+    - valkey
   aur:
     # Discord client; Vencord's CustomIdle keeps presence Online (docs/desktop.md).
     # Started minimized by hypr/autostart.lua; settings via modify_settings.json.

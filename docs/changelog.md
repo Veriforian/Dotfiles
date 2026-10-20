@@ -6,6 +6,10 @@ Config changes, newest first. One line per change; link to the doc that describe
 
 ## 2026-10-19
 
+- `pg-local` / `redis-local`: also publish on `[::1]` so `localhost` works (Node tries `::1` first); older containers are re-created, data kept. [troubleshooting](troubleshooting.md)
+- Redis: `redis-local` (container `redis`, `redis:7`, `127.0.0.1:6379`, volume `redis-data`), started by `run_onchange_after_70-dev-services`; `valkey` package for `redis-cli`. [tools](tools.md#redis)
+- mise: global Node `latest` → `22` (matches the work services; projects still override with `.nvmrc` / `mise.toml`). [tools](tools.md#mise-configmiseconfigtoml)
+- Ports 80 and up no longer need root: `run_onchange_after_66-unprivileged-ports` (sysctl `ip_unprivileged_port_start = 80`), for apps like `account` on port 80. [tools](tools.md#ports-below-1024)
 - Dev services on every Omarchy machine: `run_onchange_after_70-dev-services` (docker.service at boot, `pg-local` → postgres18, `pgadmin`); pgAdmin app-launcher entry + icon; docker/postgresql-libs in packages. [tools](tools.md#postgresql), [machines](machines.md#bootstrapping-a-new-machine)
 - Postgres: 22 Homebrew databases (PG 14) restored into `postgres18`. `pgadmin` launcher (Docker, desktop mode, host network, `pgadmin import`). Docker + Mullvad rules revised: container internet left unmarked, MSS clamping. [tools](tools.md#pgadmin)
 - Docker + Mullvad: bridge traffic gets Mullvad's firewall mark (`run_onchange_after_56`); PostgreSQL 18 in Docker; `tools/pg-export.sh` / `pg-import.sh` move Homebrew databases; `.bashrc` `PGHOST=127.0.0.1`. [tools](tools.md#postgresql)

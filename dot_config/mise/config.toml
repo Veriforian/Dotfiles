@@ -3,7 +3,7 @@ claude = "latest"
 codex = "latest"
 gh = "latest"
 go = "latest"
-node = "latest"
+node = "22"
 # rustup-managed: rustc, cargo, rustfmt, clippy; `cargo install` bins in ~/.cargo/bin
 rust = "stable"
 

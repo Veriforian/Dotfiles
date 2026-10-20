@@ -1,0 +1,20 @@
+#!/bin/bash
+# Let normal users listen on port 80 and up (Linux default: 1024 and up), as
+# macOS does, so dev servers configured for port 80/443 run without sudo.
+# Ports 1-79 stay root-only. Applies to IPv4 and IPv6. This only covers
+# binding: inbound traffic from other hosts still goes through UFW.
+# Sudo only if the setting differs. Docs: docs/tools.md#ports-below-1024
+set -euo pipefail
+
+conf=/etc/sysctl.d/60-unprivileged-ports.conf
+desired="# Installed by chezmoi (run_onchange_after_66-unprivileged-ports).
+net.ipv4.ip_unprivileged_port_start = 80"
+
+if [[ "$(cat "$conf" 2>/dev/null)" != "$desired" ]]; then
+  echo "chezmoi: installing $conf (unprivileged ports from 80)"
+  printf '%s\n' "$desired" | sudo install -m 644 -o root -g root /dev/stdin "$conf"
+fi
+if [[ "$(sysctl -n net.ipv4.ip_unprivileged_port_start)" != 80 ]]; then
+  sudo sysctl -q -p "$conf"
+  echo "chezmoi: ports 80 and up no longer need root"
+fi

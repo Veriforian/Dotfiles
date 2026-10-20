@@ -123,13 +123,17 @@ internet.
 ## PostgreSQL
 
 PostgreSQL 18 in Docker, Omarchy's way (`omarchy-install-docker-dbs` → PostgreSQL), managed by
-`~/.local/bin/pg-local`: container `postgres18`, `127.0.0.1:5432`, trust auth (no password), named volume
+`~/.local/bin/pg-local`: container `postgres18`, `127.0.0.1:5432` and `[::1]:5432`, trust auth (no password), named volume
 `postgres18-data` so the data survives re-creating the container. Client tools (`psql`, `pg_dump`) come from
 `postgresql-libs`. `.bashrc` sets `PGHOST=127.0.0.1`, since there's no local socket.
 
 - **Every Omarchy machine with Docker gets it on `chezmoi apply`** (`run_onchange_after_70-dev-services`):
   `docker.service` is enabled at boot (Omarchy only socket-activates Docker, so restart-policy containers would stay
   down until something touched Docker), then `pg-local ensure` and `pgadmin ensure`.
+- **Both loopbacks:** `localhost` resolves to `::1` first (Node and `psql` try it first), and Docker only listens on
+  the addresses it's given. So `pg-local` and `redis-local` publish on `127.0.0.1` and `::1`. `localhost`, `127.0.0.1`,
+  `::1` and `0.0.0.0` all work. A container made before this is re-created on the next `ensure`: stopped cleanly, then
+  removed, and the data stays in its volume.
 - `pg-local ensure` creates or starts the container, waits for a real TCP connection, and adds a superuser role named
   after you. So `psql -d <db>` and `postgres://localhost/<db>` work without a password, as with Homebrew.
 - Without sudoless Docker (Omarchy's default on non-work machines), the helpers use `sudo docker` in a terminal and a
@@ -155,6 +159,19 @@ x86-only) and opens it as an Omarchy web app at `http://127.0.0.1:5050`.
 - **Connections from another pgAdmin:** *Tools → Import/Export Servers → Export*, then `pgadmin import <file>.json`.
   Passwords aren't exported. pgAdmin asks on first connect; tick *Save password*.
 - `pgadmin ensure` (start without opening), `pgadmin stop`.
+
+## Redis
+
+Redis 7 in Docker, set up like PostgreSQL: `~/.local/bin/redis-local` (`run_onchange_after_70-dev-services` runs
+`redis-local ensure` on every machine with Docker). Container `redis` (Omarchy's name and image), `127.0.0.1:6379` and `[::1]:6379`, no
+password, volume `redis-data` (`/data`, so data survives re-creating the container). Services connect with the default
+`redis://localhost:6379`.
+
+- `redis-cli` comes from the `valkey` package (Arch replaced `redis` with its fork Valkey). Valkey's own server
+  (`valkey.service`) stays disabled; the Docker container is the server.
+- `redis-local ensure` (create/start, wait for `PONG`), `redis-local stop`. Overrides: `REDIS_CONTAINER`, `REDIS_IMAGE`,
+  `REDIS_VOLUME`, `REDIS_PORT`.
+- Check: `redis-cli ping` (or `docker exec redis redis-cli ping`).
 
 ## Postman
 
@@ -183,7 +200,7 @@ created there. Why: see [troubleshooting](troubleshooting.md). After it changes,
 
 ## mise (`~/.config/mise/config.toml`)
 
-Global toolchains: `claude`, `codex`, `gh`, `go`, `node` (all `latest`) and `rust` (`stable`).
+Global toolchains: `claude`, `codex`, `gh`, `go` (all `latest`), `node` (`22`, the work services' version) and `rust` (`stable`).
 - Rust: mise installs it with rustup (`~/.rustup`, `~/.cargo`), so `rustup component add rust-analyzer` / `rustup update`
   work as usual. No `. ~/.cargo/env` in `.bash_profile`: mise puts `cargo`/`rustc` on PATH.
 Editing this file re-runs `mise install` on the next `chezmoi apply` (see [scripts](scripts.md)).
@@ -197,7 +214,7 @@ prompt). nvm isn't installed: alongside mise it would fight over PATH, and mise'
 |---|---|
 | `nvm install` (reads `.nvmrc`) | `mise install` in the project |
 | `nvm use 20` (this shell) | `mise shell node@20` |
-| `nvm alias default 20` | `mise use -g node@20` (global is `latest` here) |
+| `nvm alias default 20` | `mise use -g node@20` (global is `22` here; set it in the chezmoi source, or apply puts it back) |
 | `nvm ls` | `mise ls node` |
 
 Installed for the work repos (2026-10-19): Node 8 (checkpeople) and 16 (cp-wl, crm, information). Check with
@@ -216,6 +233,18 @@ emulation here (Try Omarchy has no nested virtualization, so no `/dev/kvm`).
 - Considered: rootless Docker (`docker-rootless-extras`, AUR). It's safer, but some setups behave differently (ports
   below 1024, host networking).
 - Check: `docker run --rm hello-world`; `id -nG | grep docker`.
+
+## Ports below 1024
+
+Linux lets only root listen on ports below 1024; macOS doesn't (since 10.14). Apps whose `.env` says port 80, such as
+`Professional/account` (`TRAVELLING_PORT=80`), fail with `EACCES` / "permission denied" here.
+`run_onchange_after_66-unprivileged-ports` (every machine) writes `/etc/sysctl.d/60-unprivileged-ports.conf` with
+`net.ipv4.ip_unprivileged_port_start = 80` (sudo, once): any user can listen on 80 and up (IPv4 and IPv6), and 1-79 stay
+root-only. UFW is separate: it filters connections from other hosts, not `localhost`.
+
+- Check: `sysctl net.ipv4.ip_unprivileged_port_start` (80); `ss -ltnp | grep ':80 '`.
+- Undo: delete the file, then `sudo sysctl -w net.ipv4.ip_unprivileged_port_start=1024`.
+- Not used: `setcap cap_net_bind_service` on `node`. mise installs a new binary per version, so it would need redoing.
 
 ## tmux (`~/.config/tmux/tmux.conf`)
 

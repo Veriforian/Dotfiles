@@ -4,6 +4,22 @@
 
 Problems hit so far, newest first. Add new ones at the top with symptom → cause → fix.
 
+## Service can't reach Postgres/Redis on `localhost`, only on `0.0.0.0`
+
+- **Symptom:** a Node service with host `localhost` gets `ECONNREFUSED ::1:5432`; host `0.0.0.0` or `127.0.0.1` works.
+- **Cause:** `/etc/hosts` maps `localhost` to `127.0.0.1` and `::1`, and Node (17+) connects to `::1` first. The
+  containers were only published on `127.0.0.1`.
+- **Fix:** `pg-local` / `redis-local` also publish on `[::1]` and re-create older containers (data kept in the volumes).
+  See [tools](tools.md#postgresql).
+
+## App can't listen on port 80 ("EACCES" / permission denied)
+
+- **Symptom:** a Node app with port 80 in its `.env` (`Professional/account`, `TRAVELLING_PORT=80`) fails to start on
+  the VM; it ran fine on the Mac.
+- **Cause:** Linux reserves ports below 1024 for root (`net.ipv4.ip_unprivileged_port_start = 1024`); macOS doesn't.
+  Not the firewall: UFW doesn't filter `localhost`.
+- **Fix:** `run_onchange_after_66-unprivileged-ports` sets the limit to 80 ([tools](tools.md#ports-below-1024)).
+
 ## Docker: published ports refuse connections, containers have no internet (Mullvad on)
 
 - **Symptom:** `psql -h localhost -p 5432` gets "server closed the connection unexpectedly", even though `docker logs`
