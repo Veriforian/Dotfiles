@@ -6,6 +6,8 @@ Config changes, newest first. One line per change; link to the doc that describe
 
 ## 2026-10-19
 
+- VMs: `xdph.conf` gets `screencopy:force_shm = true` (modify_ script) so screen shares aren't black on virtio-gpu. [desktop](desktop.md#screen-sharing)
+- Vesktop: `webRTCIPHandlingPolicy = default_public_and_private_interfaces` (modify_ script) fixes voice stuck on "DTLS connecting" with VPN/Docker interfaces. [desktop](desktop.md#discord-voice-calls)
 - tmux: `fit-windows.sh` fits every window to the current screen on attach / session switch / resize / restore, plus `prefix F`. [tools](tools.md#tmux-configtmuxtmuxconf)
 - `pg-local` / `redis-local`: also publish on `[::1]` so `localhost` works (Node tries `::1` first); older containers are re-created, data kept. [troubleshooting](troubleshooting.md)
 - Redis: `redis-local` (container `redis`, `redis:7`, `127.0.0.1:6379`, volume `redis-data`), started by `run_onchange_after_70-dev-services`; `valkey` package for `redis-cli`. [tools](tools.md#redis)

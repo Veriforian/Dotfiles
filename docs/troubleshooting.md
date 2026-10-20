@@ -4,6 +4,22 @@
 
 Problems hit so far, newest first. Add new ones at the top with symptom → cause → fix.
 
+## Screen share is black (VM)
+
+- **Symptom:** Vesktop's share picker works, but the stream is black. Same in browsers.
+- **Cause:** virtio-gpu lacks DRM format modifiers, so the Hyprland portal and Chromium loop on DMA-BUF format
+  negotiation (`Incompatible formats, renegotiate stream`) and no frame arrives.
+- **Fix:** `screencopy:force_shm = true` in `xdph.conf` on VMs, then restart the portal
+  ([desktop](desktop.md#screen-sharing)).
+
+## Discord (Vesktop) voice stuck on "DTLS connecting"
+
+- **Symptom:** joining a voice channel never gets past "DTLS connecting", with Mullvad connected or disconnected.
+- **Cause:** not our firewall or routing (Discord's servers, UDP and DNS all checked fine). A Vesktop/Chromium bug on Linux
+  with several network interfaces (VPNs, Docker bridges).
+- **Fix:** Vesktop's WebRTC IP handling policy `default_public_and_private_interfaces`, set by chezmoi
+  ([desktop](desktop.md#discord-voice-calls)).
+
 ## tmux: restored windows have the wrong size on another monitor
 
 - **Symptom:** after continuum restores sessions (or switching to a PC with a different monitor), old windows and panes

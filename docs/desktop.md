@@ -13,6 +13,8 @@ Hyprland (Lua config), the Omarchy theme and the foot terminal. Defaults live in
 | `~/.config/hypr/input.lua` (template) | Stock + VM-only lines (below) |
 | `~/.config/hypr/autostart.lua` | Vesktop in the tray (below) |
 | `~/.config/vesktop/settings/settings.json` | `modify_` script: only CustomIdle (below) |
+| `~/.config/hypr/xdph.conf` | `modify_` script: VMs only, `screencopy:force_shm` ([screen sharing](#screen-sharing)) |
+| `~/.config/vesktop/settings.json` | `modify_` script: only `webRTCIPHandlingPolicy` ([voice calls](#discord-voice-calls)) |
 | `~/.config/foot/foot.ini` | Stock |
 | `~/.config/omarchy/themed/foot.ini.tpl` | Darker terminal background (below) |
 | `~/.config/omarchy/hooks/theme-set.d/10-darker-terminal-bg` | Keeps open terminals and tmux darker after a theme change (below) |
@@ -106,6 +108,30 @@ routes to each Mac device through `omarchy_host_output_*` loopback sinks (e.g. "
   `pw-metadata -n settings 0 clock.force-quantum 2048`, then `… 0` to undo.
 - **Apply:** `chezmoi apply`, then `systemctl --user restart pipewire pipewire-pulse wireplumber`.
 - **Check:** `pw-metadata -n settings 0 | grep quantum` → `2048`. `pw-top` shows the quantum in use and any errors (ERR column).
+
+## Screen sharing
+
+- **Problem (VMs):** shares from Vesktop or a browser are black. The VM's `virtio_gpu` has no DRM format modifiers
+  (Hyprland log: `supportsAddFb2Modifiers: false`), so `xdg-desktop-portal-hyprland` and Chromium never agree on a
+  DMA-BUF format. The portal log loops on `[sc] Incompatible formats, renegotiate stream`.
+- **Fix:** `screencopy { force_shm = true }` in `~/.config/hypr/xdph.conf`: frames go through shared memory instead of
+  GPU buffers (a bit more CPU). Omarchy installs that file, so `dot_config/hypr/modify_xdph.conf.tmpl` only adds the
+  line, and only when `.vm` is true. Real GPUs keep DMA-BUF.
+- **Takes effect** when the portal restarts: `systemctl --user restart xdg-desktop-portal-hyprland` (or log in again).
+- Check: `journalctl --user -u xdg-desktop-portal-hyprland -f` while starting a share shows
+  `DMA-BUF disabled (force_shm), using SHM only`.
+
+## Discord voice calls
+
+- **Problem:** calls stick on "DTLS connecting", with Mullvad on or off. Vesktop (Chromium) on Linux with extra
+  interfaces (the `work` WireGuard, Mullvad, `docker0`) offers WebRTC candidates on all of them and the handshake
+  stalls. Known upstream: [Vesktop#1356](https://github.com/Vencord/Vesktop/issues/1356), fixed in code by
+  [#1251](https://github.com/Vencord/Vesktop/pull/1251). The official Discord client isn't affected.
+- **Fix:** `webRTCIPHandlingPolicy: "default_public_and_private_interfaces"` in `~/.config/vesktop/settings.json`
+  (Settings → Vesktop → WebRTC IP handling), which keeps WebRTC on the default-route interface. Set by
+  `dot_config/private_vesktop/modify_settings.json`, a `modify_` script like the CustomIdle one: `jq` sets only that
+  key and keeps Vesktop's format (4-space indent, no final newline).
+- **Apply with Vesktop closed**, then start it (`hyprctl dispatch 'hl.dsp.exec_cmd("vesktop")'` or the launcher).
 
 ## Discord presence (Vesktop + CustomIdle)
 

@@ -1,0 +1,21 @@
+#!/bin/bash
+# chezmoi modify_ script for Vesktop's own settings (~/.config/vesktop/settings.json;
+# Vesktop writes this file itself). Gets the current file on stdin, prints it
+# back with only webRTCIPHandlingPolicy forced; everything else stays as
+# Vesktop wrote it.
+#
+# Voice calls stuck on "DTLS connecting": Vesktop on Linux with extra network
+# interfaces (WireGuard work VPN, Mullvad, Docker bridges) offers WebRTC
+# candidates on all of them and the handshake stalls (Chromium bug,
+# Vencord/Vesktop#1356, fix in #1251). "default_public_and_private_interfaces"
+# keeps WebRTC on the default-route interface. Same as Settings > Vesktop >
+# WebRTC IP handling. Output matches Vesktop's format (4 spaces, no final
+# newline). Docs: docs/desktop.md#discord-voice-calls
+set -euo pipefail
+
+current=$(cat)
+[[ -n $current ]] || current='{}'
+
+merged=$(jq --indent 4 '.webRTCIPHandlingPolicy = "default_public_and_private_interfaces"' <<<"$current")
+
+printf '%s' "$merged"

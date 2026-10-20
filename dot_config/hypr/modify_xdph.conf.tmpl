@@ -1,0 +1,28 @@
+#!/bin/bash
+# chezmoi modify_ script for ~/.config/hypr/xdph.conf (xdg-desktop-portal-hyprland;
+# Omarchy installs the file). Gets the current file on stdin and prints it back
+# unchanged, except on VMs, where it sets screencopy:force_shm = true.
+#
+# Why: the VM's virtio-gpu has no DRM format modifiers
+# (aquamarine: supportsAddFb2Modifiers false), so the portal and Chromium/Electron
+# never agree on a DMA-BUF format ("[sc] Incompatible formats, renegotiate stream"
+# in a loop) and screen shares in Vesktop/browsers are black. SHM copies frames
+# through shared memory instead: a bit more CPU, works on any GPU.
+# Takes effect when the portal restarts:
+#   systemctl --user restart xdg-desktop-portal-hyprland
+# Docs: docs/desktop.md#screen-sharing
+set -euo pipefail
+
+current=$(cat)
+{{ if not .vm -}}
+printf '%s' "$current"
+exit 0
+{{ end -}}
+
+if grep -qE '^\s*force_shm\s*=' <<<"$current"; then
+  sed -E 's/^(\s*)force_shm\s*=.*/\1force_shm = true/' <<<"$current"
+elif grep -qE '^\s*screencopy\s*\{' <<<"$current"; then
+  sed -E 's/^(\s*)screencopy\s*\{/&\n    force_shm = true/' <<<"$current"
+else
+  printf '%s\n\nscreencopy {\n    force_shm = true\n}\n' "$current"
+fi
