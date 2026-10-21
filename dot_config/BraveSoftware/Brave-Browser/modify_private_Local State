@@ -1,0 +1,27 @@
+#!/bin/bash
+# chezmoi modify_ script for Brave's "Local State" (Brave writes this file
+# itself). Gets the current file on stdin and prints it back with only
+# brave.widevine_opted_in forced on; the rest stays byte-for-byte as Brave
+# wrote it.
+#
+# Why: Spotify's web player (the Omarchy "Spotify" web app opens in Brave) and
+# other DRM sites need Google's Widevine module. Brave only downloads it after
+# this opt-in (brave://settings/extensions > Widevine). Without it Spotify loads
+# but never plays. Brave on ARM64 Linux (the Try Omarchy VM) supports it too.
+# Brave rewrites this file on exit, so apply with Brave closed; if it was open,
+# the next apply puts the setting back. Brave downloads Widevine on its next
+# start. Docs: docs/desktop.md#spotify-and-drm-sites
+set -euo pipefail
+
+current=$(cat)
+[[ -n $current ]] || current='{}'   # Brave never started: seed the opt-in
+
+if jq -e '.brave.widevine_opted_in == true' <<<"$current" >/dev/null 2>&1; then
+  printf '%s' "$current"
+  exit 0
+fi
+
+if pgrep -x brave >/dev/null; then
+  echo "chezmoi: Brave is running; close it and run 'chezmoi apply' again so the Widevine opt-in sticks" >&2
+fi
+printf '%s' "$(jq -c '.brave.widevine_opted_in = true' <<<"$current")"

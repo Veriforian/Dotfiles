@@ -1,0 +1,65 @@
+#!/bin/bash
+# Bring the VPNs up in order: Mullvad first, connected AND passing traffic,
+# then the "work" WireGuard connection, which rides inside Mullvad.
+# Replaces the manual fix (restart Mullvad, connect, nmcli connection up work).
+# Runs at login on VMs (~/.config/autostart/vpn-up.desktop); run it by hand any
+# time, e.g. after the Mac wakes from sleep.
+# Docs: docs/tools.md#mullvad-on-the-vm
+#
+# Usage: vpn-up              Mullvad, then work (if that connection exists)
+#        vpn-up --no-work    Mullvad only
+# Env:   WORK_VPN=work       NetworkManager connection to bring up
+set -uo pipefail
+
+work=${WORK_VPN:-work}
+[[ ${1:-} == --no-work ]] && work=
+
+say() {
+  echo "vpn-up: $*"
+  [ -t 1 ] || notify-send -a "VPN" "VPN" "$*" 2>/dev/null || true
+}
+# Elevate like redis-local/pg-local: sudo in a terminal, a polkit prompt otherwise.
+root() { if [ -t 0 ]; then sudo "$@"; else pkexec "$@"; fi; }
+
+daemon_ok() { timeout 5 mullvad status >/dev/null 2>&1; }
+connected() { timeout 5 mullvad status 2>/dev/null | head -1 | grep -q '^Connected'; }
+# The tunnel says connected but may pass nothing; ask Mullvad's check page.
+passes() { curl -fsS --max-time 6 https://am.i.mullvad.net/connected 2>/dev/null | grep -q '^You are connected'; }
+
+ok=0
+for attempt in 1 2 3; do
+  if ! daemon_ok; then
+    echo "vpn-up: Mullvad daemon not answering, restarting it"
+    root systemctl restart mullvad-daemon || true
+    for _ in $(seq 15); do daemon_ok && break; sleep 1; done
+  fi
+  if ! connected; then
+    timeout 45 mullvad connect --wait >/dev/null 2>&1 || true
+  fi
+  # A fresh tunnel can need a few seconds before traffic flows.
+  for _ in 1 2 3; do passes && { ok=1; break; }; sleep 2; done
+  [[ $ok == 1 ]] && break
+  echo "vpn-up: Mullvad not passing traffic (attempt $attempt), reconnecting"
+  timeout 45 mullvad reconnect --wait >/dev/null 2>&1 || true
+done
+
+if [[ $ok != 1 ]]; then
+  say "Mullvad isn't passing traffic after 3 tries; see: journalctl -u mullvad-daemon -b"
+  exit 1
+fi
+echo "vpn-up: Mullvad connected"
+
+[[ -n $work ]] || exit 0
+if ! nmcli -t -f NAME connection show 2>/dev/null | grep -qxF "$work"; then
+  exit 0   # no work VPN on this machine
+fi
+if nmcli -t -f NAME connection show --active | grep -qxF "$work"; then
+  # Already up: re-up so it re-handshakes over the current Mullvad tunnel.
+  nmcli connection down "$work" >/dev/null 2>&1 || true
+fi
+if nmcli connection up "$work" >/dev/null; then
+  say "Mullvad connected, $work VPN up"
+else
+  say "Mullvad connected, but '$work' failed to come up (nmcli connection up $work)"
+  exit 1
+fi

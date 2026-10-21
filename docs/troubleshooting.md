@@ -1,8 +1,26 @@
 # Troubleshooting
 
-[← README](../README.md) · Last updated: 2026-10-19
+[← README](../README.md) · Last updated: 2026-10-21
 
 Problems hit so far, newest first. Add new ones at the top with symptom → cause → fix.
+
+## Spotify web app won't play
+
+- **Symptom:** the Spotify web app opens, but pressing play does nothing. Other sound works.
+- **Cause:** not audio. Spotify needs the Widevine DRM module and Brave (which runs the web app) never opted in, so it
+  never downloaded it.
+- **Fix:** `brave.widevine_opted_in` set by chezmoi; apply with Brave closed, then restart Brave
+  ([desktop](desktop.md#spotify-and-drm-sites)).
+
+## Mullvad stuck after VM startup or Mac sleep; work VPN needs bringing up by hand
+
+- **Symptom:** after starting or waking the VM, Mullvad shows connected or keeps reconnecting but nothing loads;
+  restarting the app, reconnecting and `nmcli connection up work` fixed it.
+- **Cause:** the VM network has no working IPv6, but Mullvad (IP protocol _any_) sometimes picked a relay's IPv6
+  address: `Timeout while negotiating ephemeral peer`, `rx_bytes: 0`. `work` has `autoconnect no` (it must come up after
+  Mullvad), so it always needed a manual `up`.
+- **Fix:** Mullvad pinned to IPv4 relays on VMs, and `vpn-up` (run at login on VMs) waits for Mullvad to pass traffic,
+  then brings up `work`. Run `vpn-up` by hand if it happens again ([tools](tools.md#mullvad-on-the-vm)).
 
 ## Screen share is black (VM)
 

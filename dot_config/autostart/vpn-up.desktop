@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=VPN startup
+Comment=Mullvad connected and passing traffic, then the work VPN (vpn-up; VMs only)
+Exec=vpn-up
+Terminal=false
+NoDisplay=true

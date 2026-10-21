@@ -1,0 +1,18 @@
+{{- if and .vm (lookPath "mullvad") -}}
+#!/bin/bash
+# VMs only: Mullvad connects to relays over IPv4 only.
+#
+# The Mac's VM network hands the guest an IPv6 address (fec0::/64) and route
+# but carries no IPv6 traffic. Mullvad still sees IPv6 as online, and with
+# "IP protocol: any" some (re)connects, typically after the Mac sleeps, pick a
+# relay's IPv6 address: packets go out, nothing comes back ("Timeout while
+# negotiating ephemeral peer", rx_bytes 0) and the tunnel sits dead until a
+# retry happens to pick IPv4. Traffic inside the tunnel is unaffected.
+# No sudo (the mullvad CLI talks to the daemon). Docs: docs/tools.md#mullvad-on-the-vm
+set -euo pipefail
+
+if ! mullvad relay get 2>/dev/null | grep -qE 'IP protocol:\s+IPv4'; then
+  mullvad relay set ip-version ipv4
+  echo "chezmoi: Mullvad set to IPv4 relays (VM network has no working IPv6)"
+fi
+{{ end -}}

@@ -19,3 +19,8 @@ tools/**
 .local/bin/mac-share-documents-link
 .config/systemd/user/mac-share-documents-link.service
 {{ end }}
+
+# VPN startup order at login (vpn-up): VMs only, see docs/tools.md#mullvad-on-the-vm
+{{ if not .vm }}
+.config/autostart/vpn-up.desktop
+{{ end }}

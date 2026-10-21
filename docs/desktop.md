@@ -1,6 +1,6 @@
 # Desktop
 
-[← README](../README.md) · Last updated: 2026-10-19
+[← README](../README.md) · Last updated: 2026-10-21
 
 Hyprland (Lua config), the Omarchy theme and the foot terminal. Defaults live in `/usr/share/omarchy/` (read-only); user overrides in `~/.config/`.
 
@@ -15,6 +15,8 @@ Hyprland (Lua config), the Omarchy theme and the foot terminal. Defaults live in
 | `~/.config/vesktop/settings/settings.json` | `modify_` script: only CustomIdle (below) |
 | `~/.config/hypr/xdph.conf` | `modify_` script: VMs only, `screencopy:force_shm` ([screen sharing](#screen-sharing)) |
 | `~/.config/vesktop/settings.json` | `modify_` script: only `webRTCIPHandlingPolicy` ([voice calls](#discord-voice-calls)) |
+| `~/.config/BraveSoftware/Brave-Browser/Local State` | `modify_` script: only `brave.widevine_opted_in` ([Spotify](#spotify-and-drm-sites)) |
+| `~/.config/autostart/vpn-up.desktop` | VMs only: `vpn-up` at login ([tools](tools.md#mullvad-on-the-vm)) |
 | `~/.config/foot/foot.ini` | Stock |
 | `~/.config/omarchy/themed/foot.ini.tpl` | Darker terminal background (below) |
 | `~/.config/omarchy/hooks/theme-set.d/10-darker-terminal-bg` | Keeps open terminals and tmux darker after a theme change (below) |
@@ -120,6 +122,21 @@ routes to each Mac device through `omarchy_host_output_*` loopback sinks (e.g. "
 - **Takes effect** when the portal restarts: `systemctl --user restart xdg-desktop-portal-hyprland` (or log in again).
 - Check: `journalctl --user -u xdg-desktop-portal-hyprland -f` while starting a share shows
   `DMA-BUF disabled (force_shm), using SHM only`.
+
+## Spotify and DRM sites
+
+- **Problem:** the Spotify web app (Omarchy's `Spotify` launcher → `omarchy-launch-webapp`, which opens in Brave)
+  loads but won't start or play anything. Audio itself is fine (`pw-play` reaches the Mac through the
+  `omarchy_host_output_*` sink). Spotify, like Netflix and other DRM sites, needs Google's **Widevine** module, and Brave
+  only downloads it after you opt in (`brave://settings/extensions` → Widevine). Brave's `WidevineCdm` folder was empty.
+  Brave's ARM64 build supports Widevine too (Google ships `linux_arm64`; Chromium on the VM had already fetched it).
+- **Fix:** `dot_config/BraveSoftware/Brave-Browser/modify_private_Local State` sets `brave.widevine_opted_in = true`
+  with `jq`, leaving the rest of the file alone (on a fresh machine it seeds the setting before Brave's first start).
+  All machines.
+- **Apply with Brave closed** (it rewrites `Local State` on exit; the script warns if Brave is running):
+  quit Brave, `chezmoi apply`, start Brave, wait a few seconds for the download, then open Spotify.
+- Check: `ls ~/.config/BraveSoftware/Brave-Browser/WidevineCdm` shows a version folder;
+  `brave://components` lists _Widevine Content Decryption Module_ with a version.
 
 ## Discord voice calls
 

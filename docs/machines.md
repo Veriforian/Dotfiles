@@ -1,6 +1,6 @@
 # Machines
 
-[← README](../README.md) · Last updated: 2026-10-19
+[← README](../README.md) · Last updated: 2026-10-21
 
 ## Machine data
 
@@ -10,7 +10,7 @@
 |---|---|---|
 | `email` | Prompt: "Git email for this machine" | Nothing yet (see [known gaps](#known-gaps)) |
 | `work` | Prompt: "Is this a work machine" | Nothing yet |
-| `vm` | Auto: `systemd-detect-virt --vm` isn't `none` (Try Omarchy, OmacVM, UTM, any VM), or `/usr/share/try-omarchy` exists | `run_onchange_before_05-vm-network` |
+| `vm` | Auto: `systemd-detect-virt --vm` isn't `none` (Try Omarchy, OmacVM, UTM, any VM), or `/usr/share/try-omarchy` exists | `run_onchange_before_05-vm-network`, `run_onchange_after_57-vm-mullvad-ipv4`, `hypr/modify_xdph.conf.tmpl`, the `vpn-up` autostart (`.chezmoiignore`), `pipewire/…/99-vm-audio-latency.conf.tmpl`, `hypr/input.lua.tmpl` |
 
 Useful built-ins: `.chezmoi.arch` (`amd64` / `arm64`), `.chezmoi.osRelease.id` (`arch` on the desktop, `omarchy` on Try Omarchy 1.0+, `archarm` on older ARM installs), `.chezmoi.hostname`.
 

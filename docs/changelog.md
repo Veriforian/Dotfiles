@@ -4,6 +4,11 @@
 
 Config changes, newest first. One line per change; link to the doc that describes it.
 
+## 2026-10-21
+
+- Brave: `Local State` modify_ script opts in to Widevine (`brave.widevine_opted_in`), so the Spotify web app and other DRM sites play. [desktop](desktop.md#spotify-and-drm-sites)
+- VMs: Mullvad uses IPv4 relays only (`run_onchange_after_57`); new `vpn-up` (Mullvad passing traffic, then `work`), run at login on VMs via `~/.config/autostart/vpn-up.desktop`. [tools](tools.md#mullvad-on-the-vm)
+
 ## 2026-10-19
 
 - VMs: `xdph.conf` gets `screencopy:force_shm = true` (modify_ script) so screen shares aren't black on virtio-gpu. [desktop](desktop.md#screen-sharing)

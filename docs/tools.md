@@ -1,6 +1,6 @@
 # Tools
 
-[← README](../README.md) · Last updated: 2026-10-19
+[← README](../README.md) · Last updated: 2026-10-21
 
 ## git (`~/.config/git/config`)
 
@@ -192,6 +192,23 @@ password, volume `redis-data` (`/data`, so data survives re-creating the contain
   `~.`). The VM's DNS-over-TLS servers (global) are only used when the VPN is off. Check with `resolvectl query example.com`
   (should say `link: wg0-mullvad`).
 - **Install note:** the package's install step calls `updatedb`, which isn't installed (no `locate`). That message is harmless.
+
+### Mullvad on the VM
+
+- **IPv4 relays only** (`run_onchange_after_57-vm-mullvad-ipv4`, `.vm`): the Mac's VM network gives the guest an IPv6
+  address (`fec0::/64`) and route but carries no IPv6 (`ping -6` fails). Mullvad still sees IPv6 as online, and with
+  _IP protocol: any_ some reconnects, typically after the Mac sleeps, picked a relay's IPv6 address. Packets went out
+  and nothing came back (`Timeout while negotiating ephemeral peer`, `rx_bytes: 0` in `journalctl -u mullvad-daemon`),
+  so the tunnel sat dead until a retry happened to pick IPv4. The script runs `mullvad relay set ip-version ipv4`
+  (no sudo). Check: `mullvad relay get` → `IP protocol: IPv4`.
+- **`vpn-up`** (`~/.local/bin`, every machine): Mullvad first, connected *and* passing traffic (checks
+  `am.i.mullvad.net/connected`; reconnects up to 3 times, restarts the daemon if it doesn't answer), then
+  `nmcli connection up work` if that connection exists (re-upped if already up, so it handshakes over the current
+  tunnel). `vpn-up --no-work` stops after Mullvad. It replaces killing/restarting the app and bringing `work` up by
+  hand. The Mullvad GUI doesn't need restarting: it only displays the daemon's state.
+- **At login** on VMs: `~/.config/autostart/vpn-up.desktop` runs it (ignored on other machines in `.chezmoiignore`),
+  with a desktop notification for the result. After the Mac wakes from sleep, run `vpn-up` by hand if anything is stuck.
+  `work` keeps `autoconnect no`, so it never comes up before Mullvad.
 
 ## gpg / dirmngr (`~/.gnupg/dirmngr.conf`, VMs only)
 
