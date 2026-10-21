@@ -1,0 +1,47 @@
+{{- if and .vm (lookPath "omarchy-pkg-add") -}}
+#!/bin/bash
+# VMs only: Alt + mouse wheel scrolls sideways.
+#
+# The Try Omarchy Mac app never forwards horizontal scroll (MX Master thumb
+# wheel, and Shift+wheel, which macOS turns into horizontal), so the guest gets
+# nothing to work with. Alt+wheel does arrive (as vertical scroll), so
+# hypr/input.lua binds ALT + mouse_down/up to `ydotool mousemove -w`, which
+# sends a horizontal wheel event through a virtual uinput device.
+#
+# This script:
+#   1. installs ydotool (not in packages.yaml: VMs only)
+#   2. lets the logged-in user open /dev/uinput (udev uaccess tag, the same rule
+#      Steam uses) instead of the package's advice to join the `input` group,
+#      which would let any of your programs read every keystroke
+#   3. enables ydotoold as a user service (ydotool.service from the package;
+#      socket $XDG_RUNTIME_DIR/.ydotool_socket, which ydotool uses by default)
+# Sudo only for the package and the udev rule, and only if missing/different.
+# Docs: docs/desktop.md#sideways-scrolling-vm
+set -euo pipefail
+
+if ! command -v ydotool >/dev/null; then
+  echo "chezmoi: installing ydotool (Alt+wheel sideways scroll)"
+  omarchy-pkg-add ydotool
+fi
+
+rule=/etc/udev/rules.d/60-uinput-uaccess.rules
+desired='# Installed by chezmoi (run_onchange_after_58-vm-alt-scroll): the logged-in
+# user may open /dev/uinput (ydotool). Must sort before 73-seat-late.rules.
+KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", OPTIONS+="static_node=uinput"'
+
+if [[ "$(cat "$rule" 2>/dev/null)" != "$desired" ]]; then
+  echo "chezmoi: installing $rule"
+  printf '%s\n' "$desired" | sudo install -m 644 -o root -g root /dev/stdin "$rule"
+  sudo udevadm control --reload
+  sudo udevadm trigger --name-match=uinput
+  sleep 1
+fi
+
+if [ ! -w /dev/uinput ]; then
+  echo "chezmoi: /dev/uinput isn't writable yet; log out and back in (or reboot), then run: systemctl --user restart ydotool" >&2
+fi
+
+systemctl --user enable ydotool.service >/dev/null 2>&1 || true
+systemctl --user restart ydotool.service
+echo "chezmoi: Alt+wheel sideways scroll ready (ydotool.service)"
+{{ end -}}

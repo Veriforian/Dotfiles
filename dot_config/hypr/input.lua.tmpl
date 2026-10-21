@@ -56,6 +56,14 @@
 -- hl.gesture({ fingers = 3, direction = "left", action = function() hl.dispatch(hl.dsp.focus({ direction = "l" })) end })
 -- hl.gesture({ fingers = 3, direction = "right", action = function() hl.dispatch(hl.dsp.focus({ direction = "r" })) end })
 
+{{ if .vm -}}
+-- VMs: Alt + wheel scrolls sideways. The Mac app drops horizontal scroll (thumb
+-- wheel, Shift+wheel), so ydotool sends it instead (run_onchange_after_58,
+-- docs/desktop.md#sideways-scrolling-vm).
+o.bind("ALT + mouse_down", "Scroll right", "ydotool mousemove -w -x 1 -y 0")
+o.bind("ALT + mouse_up", "Scroll left", "ydotool mousemove -w -x -1 -y 0")
+
+{{ end -}}
 {{/* Try Omarchy only: each include is guarded by its own file, so other VMs
      (OmacVM, UTM) with .vm = true don't dofile() a missing path. */ -}}
 {{ if stat "/usr/share/try-omarchy/pinch-input.lua" -}}

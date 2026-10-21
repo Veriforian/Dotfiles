@@ -4,6 +4,18 @@
 
 Problems hit so far, newest first. Add new ones at the top with symptom → cause → fix.
 
+## Horizontal scroll (MX Master thumb wheel, Shift+wheel) does nothing (Try Omarchy)
+
+- **Symptom:** the thumb wheel doesn't scroll sideways, and Shift+wheel doesn't either. The normal wheel works.
+- **Cause:** the Mac app never forwards horizontal scroll to the VM. The guest mouse (`QEMU Virtio Tablet`) advertises
+  `REL_HWHEEL`, but a GTK test window (2026-10-21) got 16 vertical events and **zero** for the thumb wheel or
+  Shift+wheel. macOS itself turns Shift+wheel into a horizontal scroll, so it's dropped the same way. No guest
+  binding eats them either (`hyprctl binds`: nothing on `mouse_left`/`mouse_right`).
+- **Fix:** a Try Omarchy (Mac app) fix for the real thing. Workaround on VMs: **Alt + wheel** scrolls sideways
+  ([desktop](desktop.md#sideways-scrolling-vm)). On machines where the mouse is plugged
+  into Linux directly (the desktop), libinput passes horizontal scroll through. Shift+wheel there is up to each app:
+  browsers, Electron and GTK/Qt apps scroll sideways, terminals don't.
+
 ## Spotify web app won't play
 
 - **Symptom:** the Spotify web app opens, but pressing play does nothing. Other sound works.

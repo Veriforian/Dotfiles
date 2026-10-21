@@ -10,7 +10,7 @@ Hyprland (Lua config), the Omarchy theme and the foot terminal. Defaults live in
 |---|---|
 | `~/.config/hypr/bindings.lua` | Stock (tracked so future changes sync) |
 | `~/.config/hypr/looknfeel.lua` | No gaps, terminal-only opacity (below) |
-| `~/.config/hypr/input.lua` (template) | Stock + VM-only lines (below) |
+| `~/.config/hypr/input.lua` (template) | Stock + VM-only lines (below), including Alt+wheel [sideways scrolling](#sideways-scrolling-vm) |
 | `~/.config/hypr/autostart.lua` | Vesktop in the tray (below) |
 | `~/.config/vesktop/settings/settings.json` | `modify_` script: only CustomIdle (below) |
 | `~/.config/hypr/xdph.conf` | `modify_` script: VMs only, `screencopy:force_shm` ([screen sharing](#screen-sharing)) |
@@ -122,6 +122,20 @@ routes to each Mac device through `omarchy_host_output_*` loopback sinks (e.g. "
 - **Takes effect** when the portal restarts: `systemctl --user restart xdg-desktop-portal-hyprland` (or log in again).
 - Check: `journalctl --user -u xdg-desktop-portal-hyprland -f` while starting a share shows
   `DMA-BUF disabled (force_shm), using SHM only`.
+
+## Sideways scrolling (VM)
+
+- **Problem:** on Try Omarchy the MX Master thumb wheel and Shift+wheel don't scroll sideways. The Mac app never
+  forwards horizontal scroll, and macOS turns Shift+wheel into horizontal scroll before the VM sees it
+  ([troubleshooting](troubleshooting.md)). Shift+wheel can't be rebound in the guest, because nothing arrives.
+- **Workaround: Alt (Option) + wheel** scrolls sideways: wheel down = right, wheel up = left. `hypr/input.lua.tmpl`
+  (`.vm` only) binds `ALT + mouse_down/up` to `ydotool mousemove -w -x ±1 -y 0`. `ydotoold` sends a real horizontal
+  wheel event through a virtual uinput device, so every app sees ordinary sideways scrolling.
+- **Setup** (`run_onchange_after_58-vm-alt-scroll`, sudo): installs `ydotool`, adds
+  `/etc/udev/rules.d/60-uinput-uaccess.rules` (the logged-in user may open `/dev/uinput`, the same rule Steam uses;
+  not the `input` group, which could read every keystroke), and enables the user service `ydotool.service`.
+- Alt+wheel loses any app meaning it had (rare; Ctrl+wheel zoom is untouched). One short `ydotool` run per notch.
+- Check: `systemctl --user status ydotool`; `ydotool mousemove -w -x 1 -y 0` over a wide page scrolls it right.
 
 ## Spotify and DRM sites
 

@@ -6,6 +6,7 @@ Config changes, newest first. One line per change; link to the doc that describe
 
 ## 2026-10-21
 
+- VMs: Alt+wheel scrolls sideways (Hyprland binds → `ydotool`), since the Mac app drops horizontal scroll; `run_onchange_after_58` installs ydotool, a uinput `uaccess` udev rule and `ydotool.service`. [desktop](desktop.md#sideways-scrolling-vm)
 - Brave: `Local State` modify_ script opts in to Widevine (`brave.widevine_opted_in`), so the Spotify web app and other DRM sites play. [desktop](desktop.md#spotify-and-drm-sites)
 - VMs: Mullvad uses IPv4 relays only (`run_onchange_after_57`); new `vpn-up` (Mullvad passing traffic, then `work`), run at login on VMs via `~/.config/autostart/vpn-up.desktop`. [tools](tools.md#mullvad-on-the-vm)
 
