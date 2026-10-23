@@ -1,6 +1,6 @@
 # Tools
 
-[← README](../README.md) · Last updated: 2026-10-21
+[← README](../README.md) · Last updated: 2026-10-22
 
 ## git (`~/.config/git/config`)
 
@@ -266,6 +266,14 @@ root-only. UFW is separate: it filters connections from other hosts, not `localh
 ## tmux (`~/.config/tmux/tmux.conf`)
 
 Omarchy stock config (prefix `C-Space`, Omarchy keys and theme) with the Mac `~/.tmux.conf` merged in at the bottom.
+
+**Prefixes and nested tmux** (e.g. tmux on an EC2 box over ssh, inside this tmux): the prefix is `C-Space`, with `C-b`
+as a second prefix (`prefix2`).
+- `C-b C-b <key>`: sends `C-b` through to the inner tmux (`bind C-b send-prefix -2`), then `<key>` is its command
+  (`C-b C-b c` = new window on the server).
+- `C-Space C-Space <key>`: the same for an inner tmux that also uses `C-Space` (these dotfiles).
+- Without the `C-b` binding, the second `C-b` did nothing: tmux's built-in `send-prefix` sends only the *first* prefix
+  (`C-Space`), which a default tmux ignores.
 
 **From the Mac:**
 

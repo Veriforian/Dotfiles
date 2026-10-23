@@ -4,6 +4,10 @@
 
 Config changes, newest first. One line per change; link to the doc that describes it.
 
+## 2026-10-22
+
+- tmux: `C-b C-b` sends `C-b` to a nested tmux (`bind C-b send-prefix -2`), e.g. tmux on an EC2 box over ssh. [tools](tools.md#tmux-configtmuxtmuxconf)
+
 ## 2026-10-21
 
 - VMs: Alt+wheel scrolls sideways (Hyprland binds → `ydotool`), since the Mac app drops horizontal scroll; `run_onchange_after_58` installs ydotool, a uinput `uaccess` udev rule and `ydotool.service`. [desktop](desktop.md#sideways-scrolling-vm)

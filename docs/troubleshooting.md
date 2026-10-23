@@ -1,8 +1,16 @@
 # Troubleshooting
 
-[← README](../README.md) · Last updated: 2026-10-21
+[← README](../README.md) · Last updated: 2026-10-22
 
 Problems hit so far, newest first. Add new ones at the top with symptom → cause → fix.
+
+## Nested tmux (ssh) ignores `C-b C-b`
+
+- **Symptom:** in tmux on a server (default prefix `C-b`), run from inside the local tmux, `C-b C-b <key>` does nothing.
+- **Cause:** locally `C-b` is only the second prefix (`prefix2`); the main one is `C-Space`. After the local prefix, `C-b`
+  had no binding, so it was swallowed. (`send-prefix` alone would send `C-Space`, which the server's tmux ignores.)
+- **Fix:** `bind C-b send-prefix -2` in `tmux.conf` ([tools](tools.md#tmux-configtmuxtmuxconf)). Verified with a
+  throwaway nested pair: `C-b C-b c` opens a window in the inner tmux only.
 
 ## Horizontal scroll (MX Master thumb wheel, Shift+wheel) does nothing (Try Omarchy)
 
